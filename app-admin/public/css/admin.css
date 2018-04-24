@@ -1,0 +1,76 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    width: 100%;
+}
+
+.top {
+    background-color: #ffffff;
+    height: 7.8%;
+}
+
+.top .logo img {
+    margin: 1% 15%
+}
+
+.top .text {
+    float: right;
+    margin: 1.3% 16%
+}
+
+.top .content1 .back_img {
+    width: 100%;
+}
+
+.top .content1 .input {
+    position: relative;
+    left: 10%;
+    bottom: 80%;
+}
+
+.top .login1 {
+    width: 30%;
+    min-height: 76%;
+    background: #ffffff;
+    position: absolute;
+    left: 46%;
+    bottom: 11.8%;
+    border-radius: 0 20px 20px 0;
+    -moz-border-radius: 0 20px 20px 0; /* 老的 Firefox */
+    box-shadow: 10px 10px 30px #abb5f6;
+}
+
+.top .submit {
+    width: 42%;
+    height: 56px;
+    border: none;
+    background: url('../img/dengr.png') no-repeat;
+}
+
+.content1 {
+    width: 100%;
+}
+
+::-webkit-scrollbar {
+    display: none;
+}
+
+.content1 .form-control {
+    width: 70%;
+    border-radius: 5px;
+    -moz-border-radius: 5px; /* 老的 Firefox */
+}
+
+.content1 .top_txt {
+    position: relative;
+    left: 13%;
+    top: 75px;
+}
+
+.top .content1 .back2 {
+    width: 46%;
+    height: auto;
+}

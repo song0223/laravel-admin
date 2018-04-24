@@ -1,0 +1,35 @@
+<?php
+
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+class CreatePermissionTable extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('permission', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('name', 50)->default('')->comment('权限名称');
+            $table->string('code', 50)->default('')->comment('权限编码');
+            $table->string('desc')->default('')->copmment('描述');
+            $table->timestamps();
+            $table->softDeletes();
+        });
+        DB::statement("ALTER TABLE `permission` comment'权限表'"); // 表注释
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::drop('permission');
+    }
+}
