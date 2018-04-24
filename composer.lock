@@ -4,16 +4,51 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-
-    "content-hash": "6a4c7a4ff93a0587920af4e0efc6c7f6",
-
-    "content-hash": "a02d33d6f4f6cdd988b868f4d0630e22",
-
-    "content-hash": "daf992e33b7698475af685b8c5880dfb",
-    "content-hash": "daf992e33b7698475af685b8c5880dfb",
-    "content-hash": "05bbe4a103bf5c8cdba7175f4625f433",
-
+    "content-hash": "57ad548505f64d041d1b629d54956415",
     "packages": [
+        {
+            "name": "bacao/alert",
+            "version": "v1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/song0223/laravel-pop-alert.git",
+                "reference": "3f5acf406abe2fd00c6bb348c9fad7d3c1d74369"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://files.phpcomposer.com/files/song0223/laravel-pop-alert/3f5acf406abe2fd00c6bb348c9fad7d3c1d74369.zip",
+                "reference": "3f5acf406abe2fd00c6bb348c9fad7d3c1d74369",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.5.9"
+            },
+            "require-dev": {
+                "mockery/mockery": "0.9.*",
+                "phpunit/phpunit": "~5.7"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Bacao\\Alert": "src/"
+                },
+                "files": [
+                    "src/bacao/alert/functions.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "宋祥",
+                    "email": "790292520@qq.com"
+                }
+            ],
+            "description": "laravel alert",
+            "time": "2018-04-23T03:27:10+00:00"
+        },
         {
             "name": "barryvdh/laravel-ide-helper",
             "version": "v2.4.3",
@@ -2853,74 +2888,6 @@
                 "environment"
             ],
             "time": "2016-09-01T10:05:43+00:00"
-        },
-        {
-            "name": "zizaco/entrust",
-            "version": "5.2.x-dev",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/Zizaco/entrust.git",
-                "reference": "3623cc052937d9e62543402b50f24065720d44b9"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/Zizaco/entrust/zipball/3623cc052937d9e62543402b50f24065720d44b9",
-                "reference": "3623cc052937d9e62543402b50f24065720d44b9",
-                "shasum": ""
-            },
-            "require": {
-                "illuminate/cache": "~5.0",
-                "illuminate/console": "~5.0",
-                "illuminate/support": "~5.0",
-                "php": ">=5.5.0"
-            },
-            "require-dev": {
-                "illuminate/database": "~5.0",
-                "mockery/mockery": "dev-master",
-                "phpunit/phpunit": "~4.1",
-                "sami/sami": "dev-master"
-            },
-            "type": "library",
-            "autoload": {
-                "classmap": [
-                    "src/commands"
-                ],
-                "psr-4": {
-                    "Zizaco\\Entrust\\": "src/Entrust/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Andrew Elkins",
-                    "homepage": "http://andrewelkins.com"
-                },
-                {
-                    "name": "Zizaco Zizuini",
-                    "email": "zizaco@gmail.com"
-                },
-                {
-                    "name": "Ben Batschelet",
-                    "homepage": "http://github.com/bbatsche"
-                },
-                {
-                    "name": "Michele Angioni",
-                    "email": "michele.angioni@gmail.com"
-                }
-            ],
-            "description": "This package provides a flexible way to add Role-based Permissions to Laravel",
-            "keywords": [
-                "acl",
-                "auth",
-                "illuminate",
-                "laravel",
-                "permission",
-                "roles"
-            ],
-            "time": "2016-12-29T06:25:06+00:00"
         }
     ],
     "packages-dev": [
@@ -4011,45 +3978,6 @@
             "time": "2018-01-06T05:45:45+00:00"
         },
         {
-            "name": "roquie/laravel-dusk-select2",
-            "version": "1.0.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/roquie/laravel-dusk-select2.git",
-                "reference": "7a7df1a79e9a398cce8066d6192736ea6d06bf4d"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/roquie/laravel-dusk-select2/zipball/7a7df1a79e9a398cce8066d6192736ea6d06bf4d",
-                "reference": "7a7df1a79e9a398cce8066d6192736ea6d06bf4d",
-                "shasum": ""
-            },
-            "require-dev": {
-                "laravel/dusk": "^2.0",
-                "laravel/laravel": "^5.5",
-                "phpunit/phpunit": "^6.3",
-                "symfony/var-dumper": "^3.2"
-            },
-            "type": "library",
-            "autoload": {
-                "files": [
-                    "src/macro.php"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "roquie",
-                    "email": "roquie0@gmail.com"
-                }
-            ],
-            "description": "Select2.js support for the Laravel Dusk testing.",
-            "time": "2017-09-04T13:16:09+00:00"
-        },
-        {
             "name": "sebastian/code-unit-reverse-lookup",
             "version": "1.0.1",
             "source": {
@@ -4744,9 +4672,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "zizaco/entrust": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
