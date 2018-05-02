@@ -36,7 +36,7 @@ require __DIR__.'/../vendor/autoload.php'; => require __DIR__.'/../../vendor/aut
 ```php
 require __DIR__.'/vendor/autoload.php'; => require __DIR__.'/../vendor/autoload.php';
 ```
-- 第六步：修改bootstrap/app.php（简单的来说就是将默认的Application换成我费了好大劲才找的一个Application，我把他放在了core/Foundation，功能就是执行php app-web/artisan的时候会将需要的composer.json指向根目录，App\Web是要跟当前修改的命名空间一致）
+- 第六步：修改bootstrap/app.php（简单的来说就是将默认的Application换成我费了好大劲才找的一个Application，我把他放在了core/App/Foundation，功能就是执行php app-web/artisan的时候会将需要的composer.json指向根目录，App\Web是要跟当前修改的命名空间一致）
 ```php
 $app = new Illuminate\Foundation\Application => $app = new App\Foundation\Application
 
