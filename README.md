@@ -49,8 +49,8 @@ App\Exceptions\Handler::class => App\Web\Exceptions\Handler::class
 
 - 最后执行composer dump-autoload
 
---
-简单写下框架用法：
+
+### 简单写下框架用法：
 ```
 git clone git@github.com:song0223/laravel-admin.git
 ```  
