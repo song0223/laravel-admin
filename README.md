@@ -47,7 +47,8 @@ App\Console\Kernel::class => App\Web\Console\Kernel::class
 App\Exceptions\Handler::class => App\Web\Exceptions\Handler::class
 ```
 
-执行composer dump-autoload
+- 最后执行composer dump-autoload
+
 --
 简单写下框架用法：
 ```
