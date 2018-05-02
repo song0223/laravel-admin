@@ -37,8 +37,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "App\\Tests\\": "app-admin/tests/",
-            "Tests\\": "core/tests/"
+            "Tests\\Admin\\": "app-admin/tests/"
         }
     },
     "extra": {
