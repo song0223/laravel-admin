@@ -63,4 +63,4 @@ php core/artisan migrate
 ```
 php core/artisan db:seed
 ```
-记得修改下.evn文件
+记得修改下.evn文件信息再跑migration
