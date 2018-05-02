@@ -12,69 +12,69 @@ class AdminRepository
         return $collects = collect(
             [
                 [
-                    'count' => '地图管理',
-                    'title' => 'Map Management',
-                    'sup'   => '人',
-                    'icon'  => 'ion-person-add',
-                    'bck'   => 'bg-aqua',
-                    'url'   => '/ceshi',
+                    'count' => 44,
+                    'title' => 'All Members',
+                    'sup' => '人',
+                    'icon' => 'ion-person-add',
+                    'bck' => 'bg-aqua',
+                    'url' => '/admin/usermember/index'
                 ],
                 [
-                    'count' => '用户管理',
-                    'title' => 'User Management',
-                    'sup'   => '篇',
-                    'icon'  => 'ion-document',
-                    'bck'   => 'bg-green',
-                    'url'   => '/admin/usermember/index',
+                    'count' => 45,
+                    'title' => 'All Articles',
+                    'sup' => '篇',
+                    'icon' => 'ion-document',
+                    'bck' => 'bg-green',
+                    'url' => '/admin/article/index'
                 ],
                 [
-                    'count' => '会员管理',
-                    'title' => 'Member Management',
-                    'sup'   => '个',
-                    'icon'  => 'ion-videocamera',
-                    'bck'   => 'bg-purple',
-                    'url'   => '/admin/user/index',
+                    'count' => 33,
+                    'title' => 'All videos',
+                    'sup' => '个',
+                    'icon' => 'ion-videocamera',
+                    'bck' => 'bg-purple',
+                    'url' => 'admin/video/index'
                 ],
                 [
-                    'count' => '基础信息管理',
-                    'title' => 'Basic Information Management',
-                    'sup'   => '个',
-                    'icon'  => 'ion-film-marker',
-                    'bck'   => 'bg-yellow',
-                    'url'   => '/admin/basic-info/vehicle-info/index',
+                    'count' => 11,
+                    'title' => 'All News',
+                    'sup' => '个',
+                    'icon' => 'ion-film-marker',
+                    'bck' => 'bg-yellow',
+                    'url' => 'admin/series/index'
                 ],
                 [
-                    'count' => '订单管理',
-                    'title' => 'Order Management',
-                    'sup'   => '条',
-                    'icon'  => 'ion-document',
-                    'bck'   => 'bg-red',
-                    'url'   => '/admin/order/order/index',
+                    'count' => 33,
+                    'title' => 'All Comments',
+                    'sup' => '条',
+                    'icon' => 'ion-document',
+                    'bck' => 'bg-red',
+                    'url' => 'admin/discussion/index'
                 ],
                 [
-                    'count' => '基础设置',
-                    'title' => 'Basic Setting',
-                    'sup'   => '条',
-                    'icon'  => 'ion-android-textsms',
-                    'bck'   => 'bg-orange',
-                    'url'   => '/cate/index',
+                    'count' => 44,
+                    'title' => 'All Lists',
+                    'sup' => '条',
+                    'icon' => 'ion-android-textsms',
+                    'bck' => 'bg-orange',
+                    'url' => 'admin/comment/index'
                 ],
                 [
-                    'count' => '温控管理',
-                    'title' => 'Temperature Management',
-                    'sup'   => '条',
-                    'icon'  => 'ion-pricetags',
-                    'bck'   => 'bg-olive',
-                    'url'   => '/admin/control/index',
+                    'count' => 43,
+                    'title' => 'All Tasks',
+                    'sup' => '条',
+                    'icon' => 'ion-pricetags',
+                    'bck' => 'bg-olive',
+                    'url' => 'admin/tags/index'
                 ],
                 [
-                    'count' => '财务管理',
-                    'title' => 'Finance Management',
-                    'sup'   => '首',
-                    'icon'  => 'ion-music-note',
-                    'bck'   => 'bg-maroon',
-                    'url'   => '/admin/finance/deposit/index',
-                ],
+                    'count' => 55,
+                    'title' => 'All musics',
+                    'sup' => '首',
+                    'icon' => 'ion-music-note',
+                    'bck' => 'bg-maroon',
+                    'url' => 'admin/broadcast/index'
+                ]
             ]
         );
     }

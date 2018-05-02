@@ -11,9 +11,9 @@
 @stop
 
 @section('content')
-    <h3 class="page-header"><a href="{{url('/admin/usermember/index')}}" class="btn btn-block btn-primary"
+    <h3 class="page-header"><a href="{{route('admin.user.index')}}" class="btn btn-block btn-primary"
                                style="width:100px">返回</a></h3>
-    <form action="{{url('/admin/add')}}" method="post" value="{{csrf_token()}}">
+    <form action="{{route('admin.user.store', ['id' => $id ?? 0])}}" method="post">
         {{csrf_field()}}
         <div class="nav-tabs-custom">
             <ul class="nav nav-tabs">
@@ -22,34 +22,32 @@
             <div class="tab-content">
                 <div class="tab-pane active" id="tab_1">
                     <div class="form-group">
-                        <label>登录用户名</label>
-                            <input type="text" class="form-control" id="inputName3" name="name" placeholder="name">
+                        <label>用户名</label>
+                            <input type="text" class="form-control" id="inputName3" name="name" placeholder="用户名" value="{{$user_info['name'] or ''}}">
                     </div>
 
                     <div class="form-group">
                         <label>邮箱</label>
-                            <input type="text" class="form-control" id="inputEmail3" name="email" placeholder="email">
+                            <input type="text" class="form-control" id="inputEmail3" name="email" placeholder="邮箱" value="{{$user_info['email'] or ''}}">
                     </div>
 
                     <div class="form-group">
-                        <label>登录密码</label>
-                            <input type="password" class="form-control" id="inputPassword3" name="password"
-                                   placeholder="password">
+                        <label>密码</label>
+                            <input type="password" class="form-control" id="inputEmail3" name="password" placeholder="密码">
                     </div>
 
                     <div class="form-group">
                         <label>角色分组</label>
-                            <select name="role_id" class="form-control">
-                                @foreach($list as $val)
-                                    <option value="{!!$val->id!!}">{!!$val->name!!}</option>
+                            <select name="role" class="form-control">
+                                @foreach(($role_list ?? []) as $role)
+                                    <option value="{{$role->id}}">{{$role->name}}</option>
                                 @endforeach
                             </select>
                     </div>
-
                 </div>
                 <!-- /.box-body -->
                 <div class="box-footer">
-                    <button type="submit" class="btn btn-info right">注册</button>
+                    <button type="submit" class="btn btn-info right">提交</button>
                 </div>
             </div>
         </div>

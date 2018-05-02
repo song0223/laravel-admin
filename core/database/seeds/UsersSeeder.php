@@ -22,7 +22,6 @@ class UsersSeeder extends Seeder
             $user_model->name = $item['name'];
             $user_model->email = $item['email'];
             $user_model->password = $item['password'];
-            $user_model->role_id = $item['role_id'];
             $user_model->save();
         }
     }
@@ -35,7 +34,6 @@ class UsersSeeder extends Seeder
                 'name' => 'admin',
                 'email' => 'admin@xx.com',
                 'password' => '$2y$10$VTRap.PhJ.XSdVnNFVlTnOBsEIejcS94px9yEPLgjFIuv6z3JZpIm',
-                'role_id' => '1',
             ]
         ];
     }
