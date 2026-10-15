@@ -17,12 +17,35 @@ use Illuminate\Support\Collection;
 class HandleController extends Controller
 {
     /**
+     * [Security] 2026-10-14: 限制动态实例化只允许业务与框架自身的类。
+     * _form_/_action_/selectable/renderable 四个入口原版可实例化任意类，
+     * 已被攻击者利用为 RCE/SSRF 探测入口。
+     */
+    protected function assertAllowedClass($class)
+    {
+        if (strpos($class, 'App\\') !== 0 && strpos($class, 'Encore\\Admin\\') !== 0) {
+            throw new Exception("Unauthorized class [{$class}].");
+        }
+    }
+
+    /**
+     * [Security] 2026-10-14: 这些入口未挂鉴权中间件，先验登录。
+     */
+    protected function assertAuthenticated()
+    {
+        if (!\Illuminate\Support\Facades\Auth::guard('admin')->check()) {
+            abort(403, 'Unauthenticated.');
+        }
+    }
+
+    /**
      * @param Request $request
      *
      * @return $this|mixed
      */
     public function handleForm(Request $request)
     {
+        $this->assertAuthenticated();
         $form = $this->resolveForm($request);
 
         if ($errors = $form->validate($request)) {
@@ -46,6 +69,7 @@ class HandleController extends Controller
         }
 
         $formClass = $request->get('_form_');
+        $this->assertAllowedClass($formClass);
 
         if (!class_exists($formClass)) {
             throw new Exception("Form [{$formClass}] does not exist.");
@@ -68,6 +92,7 @@ class HandleController extends Controller
      */
     public function handleAction(Request $request)
     {
+        $this->assertAuthenticated();
         $action = $this->resolveActionInstance($request);
 
         $model = null;
@@ -113,6 +138,7 @@ class HandleController extends Controller
         }
 
         $actionClass = str_replace('_', '\\', $request->get('_action'));
+        $this->assertAllowedClass($actionClass);
 
         if (!class_exists($actionClass)) {
             throw new Exception("Form [{$actionClass}] does not exist.");
@@ -152,10 +178,12 @@ class HandleController extends Controller
      */
     public function handleSelectable(Request $request)
     {
+        $this->assertAuthenticated();
         $class = $request->get('selectable');
         $args = $request->get('args', []);
 
         $class = str_replace('_', '\\', $class);
+        $this->assertAllowedClass($class);
 
         if (class_exists($class)) {
             /** @var \Encore\Admin\Grid\Selectable $selectable */
@@ -174,10 +202,12 @@ class HandleController extends Controller
      */
     public function handleRenderable(Request $request)
     {
+        $this->assertAuthenticated();
         $class = $request->get('renderable');
         $key = $request->get('key');
 
         $class = str_replace('_', '\\', $class);
+        $this->assertAllowedClass($class);
 
         if (class_exists($class)) {
             /** @var Renderable $selectable */

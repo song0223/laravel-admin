@@ -1,3 +1,28 @@
+> ## ⚠️ 安全维护分支说明（v1.8.19-secure）
+>
+> 本仓库是 `z-song/laravel-admin` **v1.8.1 → v1.8.19 基线的安全维护分支**（原作者已停止维护），修复了官方至今未修复的 **HandleController 未授权任意类实例化 RCE**（官方 v1.8.19 经逐行 diff 验证并未修复该漏洞，攻击者已在生产环境实战利用）。
+>
+> 相对官方 v1.8.19 仅改动两处文件：
+>
+> 1. **`src/Controllers/HandleController.php`**
+>    - 新增 `assertAuthenticated()`：`_handle_form_` / `_handle_action_` / `_handle_selectable_` / `_handle_renderable_` 四个入口先验 Admin guard 登录，未登录返回 403；
+>    - 新增 `assertAllowedClass()`：动态实例化的类必须在 `App\` 或 `Encore\Admin\` 命名空间下（类白名单），阻断 `GuzzleHttp\Client` 等任意类实例化 SSRF/RCE。
+> 2. **`src/Middleware/Pjax.php`**
+>    - `handleErrorResponse()` 对 `$response->exception` 为 `null` 的错误响应（中间件直接返回的 4xx/5xx JSON）做友好展示，替代原版 `get_class(null)` 把真实错误放大成 500 并吞掉原始信息的问题。
+>
+> 使用方式（composer VCS + inline alias，包名保持 `encore/laravel-admin` 不变）：
+>
+> ```json
+> "repositories": [
+>     {"type": "vcs", "url": "https://github.com/song0223/laravel-admin"}
+> ],
+> "require": {
+>     "encore/laravel-admin": "dev-v1.8.19-secure as 1.8.19"
+> }
+> ```
+>
+> 除上述两处文件外，本分支与官方 v1.8.19 完全一致；后续新功能开发与 PHP 8 / Laravel 新版本适配将在此仓库独立分支推进。
+
 <p align="center">
 <a href="https://laravel-admin.org/">
 <img src="https://laravel-admin.org/images/logo002.png" alt="laravel-admin">

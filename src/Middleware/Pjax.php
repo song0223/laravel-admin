@@ -67,6 +67,28 @@ class Pjax
     {
         $exception = $response->exception;
 
+        // [Security] 2026-10-14: 错误响应不一定来自异常（如中间件直接返回的 4xx/5xx JSON），
+        // 此时 exception 属性为 null，原版直接 get_class(null) 会把真实错误
+        // 放大成一个莫名的 500 并吞掉原始信息。
+        if (!$exception) {
+            $content = $response->getContent();
+            if (0 === strpos($content, '{')) {
+                $decoded = json_decode($content, true);
+                if (is_array($decoded)) {
+                    $content = $decoded['msg'] ?? ($decoded['message'] ?? json_encode($decoded, JSON_UNESCAPED_UNICODE));
+                }
+            }
+
+            $error = new MessageBag([
+                'type'    => 'HttpError',
+                'message' => 'HTTP ' . $response->getStatusCode() . ': ' . mb_substr(strip_tags($content), 0, 300),
+                'file'    => '',
+                'line'    => '',
+            ]);
+
+            return back()->withInput()->withErrors($error, 'exception');
+        }
+
         $error = new MessageBag([
             'type'    => get_class($exception),
             'message' => $exception->getMessage(),
