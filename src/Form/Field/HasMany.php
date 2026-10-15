@@ -114,7 +114,7 @@ class HasMany extends Field
 
         /** unset item that contains remove flag */
         foreach ($input[$this->column] as $key => $value) {
-            if ($value[NestedForm::REMOVE_FLAG_NAME]) {
+            if (!empty($value[NestedForm::REMOVE_FLAG_NAME])) {
                 unset($input[$this->column][$key]);
             }
         }
@@ -427,7 +427,7 @@ class HasMany extends Field
          */
         if ($values = old($this->column)) {
             foreach ($values as $key => $data) {
-                if ($data[NestedForm::REMOVE_FLAG_NAME] == 1) {
+                if (($data[NestedForm::REMOVE_FLAG_NAME] ?? 0) == 1) {
                     continue;
                 }
 

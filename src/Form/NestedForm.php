@@ -270,7 +270,7 @@ class NestedForm
      */
     protected function prepareRecord($record)
     {
-        if ($record[static::REMOVE_FLAG_NAME] == 1) {
+        if (($record[static::REMOVE_FLAG_NAME] ?? 0) == 1) {
             return $record;
         }
 
@@ -301,7 +301,7 @@ class NestedForm
             }
         }
 
-        $prepared[static::REMOVE_FLAG_NAME] = $record[static::REMOVE_FLAG_NAME];
+        $prepared[static::REMOVE_FLAG_NAME] = $record[static::REMOVE_FLAG_NAME] ?? 0;
 
         return $prepared;
     }
