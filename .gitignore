@@ -7,3 +7,6 @@ composer.lock
 .idea/
 .php_cs.cache
 .vscode/
+# master 时代遗留的本地目录，不属于包内容，禁止入库
+/app-admin/
+/core/

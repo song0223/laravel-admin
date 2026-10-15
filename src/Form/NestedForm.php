@@ -441,6 +441,30 @@ class NestedForm
      */
     public function __call($method, $arguments)
     {
+        // [Feature] 嵌套行内的多图上传（上传/拖拽排序/单张删除）
+        if ($method === 'hasmanyMultipleImage' || $method === 'hasmanyExtraMultipleImage') {
+            $column = Arr::get($arguments, 0, '');
+
+            /* @var Field $field */
+            $field = new Field\HasManyMultipleImage($column, array_slice($arguments, 1));
+
+            if ($this->form instanceof WidgetForm) {
+                $field->setWidgetForm($this->form);
+            } else {
+                $field->setForm($this->form);
+            }
+
+            if (method_exists($field, 'setNestedForm')) {
+                $field->setNestedForm($this);
+            }
+
+            $field = $this->formatField($field);
+
+            $this->pushField($field);
+
+            return $field;
+        }
+
         if ($className = Form::findFieldClass($method)) {
             $column = Arr::get($arguments, 0, '');
 

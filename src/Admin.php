@@ -327,6 +327,9 @@ class Admin
                 $router->post('_handle_action_', 'HandleController@handleAction')->name('admin.handle-action');
                 $router->get('_handle_selectable_', 'HandleController@handleSelectable')->name('admin.handle-selectable');
                 $router->get('_handle_renderable_', 'HandleController@handleRenderable')->name('admin.handle-renderable');
+
+                /* [Feature] hasMany 多图字段已有行的单张删除 */
+                $router->post('hasmany-multiple-image/delete', 'HasManyMultipleImageController@delete')->name('admin.hasmany-multiple-image-delete');
             });
 
             $authController = config('admin.auth.controller', AuthController::class);

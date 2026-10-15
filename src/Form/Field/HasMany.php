@@ -314,7 +314,58 @@ class HasMany extends Field
     {
         $form = $this->buildNestedForm($this->column, $this->builder);
 
-        return $form->setOriginal($this->original, $this->getKeyName())->prepare($input);
+        $prepared = $form->setOriginal($this->original, $this->getKeyName())->prepare($input);
+
+        // [Feature] HasManyMultipleImage 字段的行内拖拽排序：
+        // 按提交的 {column}__order 重排图片数组，随表单保存一并落库
+        $imageColumns = [];
+
+        foreach ($form->fields() as $field) {
+            if ($field instanceof HasManyMultipleImage) {
+                $imageColumns[] = $field->column();
+            }
+        }
+
+        if (empty($imageColumns)) {
+            return $prepared;
+        }
+
+        $originalRecords = $this->originalRecordsByKey();
+
+        foreach ($input as $key => $record) {
+            foreach ($imageColumns as $column) {
+                $prepared[$key] = HasManyMultipleImage::applyPreparedOrder(
+                    $prepared[$key] ?? [],
+                    (array) $record,
+                    Arr::get($originalRecords, "{$key}.{$column}"),
+                    $column
+                );
+            }
+        }
+
+        return $prepared;
+    }
+
+    /**
+     * 按嵌套行主键索引的原始记录，供多图排序时取行内图片的原始顺序。
+     *
+     * @return array
+     */
+    protected function originalRecordsByKey()
+    {
+        $records = [];
+        $relatedKey = $this->getKeyName();
+
+        foreach ((array) $this->original as $index => $record) {
+            if (!is_array($record)) {
+                continue;
+            }
+
+            $key = $record[$relatedKey] ?? $index;
+            $records[$key] = $record;
+        }
+
+        return $records;
     }
 
     /**
@@ -497,7 +548,7 @@ $('#has-many-{$this->column}').off('click', '.add').on('click', '.add', function
 
     var template = tpl.html().replace(/{$defaultKey}/g, index);
     $('.has-many-{$this->column}-forms').append(template);
-    {$templateScript}
+    {$this->replaceTemplateKeyScript(json_encode($templateScript))}
     return false;
 });
 
@@ -551,7 +602,7 @@ $('#has-many-{$this->column} > .header').off('click', '.add').on('click', '.add'
     $('#has-many-{$this->column} > .nav').append(navTabHtml);
     $('#has-many-{$this->column} > .tab-content').append(paneHtml);
     $('#has-many-{$this->column} > .nav > li:last-child a').tab('show');
-    {$templateScript}
+    {$this->replaceTemplateKeyScript(json_encode($templateScript))}
 });
 
 if ($('.has-error').length) {
@@ -597,7 +648,7 @@ $('#has-many-{$this->column}').on('click', '.add', function () {
 
     var template = tpl.html().replace(/{$defaultKey}/g, index);
     $('.has-many-{$this->column}-forms').append(template);
-    {$templateScript}
+    {$this->replaceTemplateKeyScript(json_encode($templateScript))}
     return false;
 });
 
@@ -731,5 +782,27 @@ EOT;
             'relationName' => $this->relationName,
             'options'      => $this->options,
         ]);
+    }
+
+    /**
+     * [Feature] 新增行模板中的脚本需按行 key 动态执行（多图 fileinit 等），
+     * 以临时 script 标签方式注入替换后的脚本。
+     *
+     * @param string $templateScript
+     *
+     * @return string
+     */
+    protected function replaceTemplateKeyScript($templateScript)
+    {
+        $defaultKey = NestedForm::DEFAULT_KEY_NAME;
+
+        return <<<EOT
+    var currentScript = {$templateScript};
+    var scriptTag = document.createElement('script');
+    scriptTag.type = 'text/javascript';
+    scriptTag.text = currentScript.replace(/{$defaultKey}/g, index);
+    document.body.appendChild(scriptTag);
+    document.body.removeChild(scriptTag);
+EOT;
     }
 }
