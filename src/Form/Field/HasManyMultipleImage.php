@@ -426,10 +426,34 @@ EOT;
     }
 
     /**
+     * 每帧 key 使用**图片路径**：删除请求按路径定位图片，免疫
+     * 前端帧索引与数据库数组索引错位导致的"删错图"问题。
+     *
+     * @return array
+     */
+    protected function initialPreviewConfig()
+    {
+        $config = [];
+
+        foreach ((array) $this->value as $file) {
+            $config[] = array_merge([
+                'caption' => basename($file),
+                'key'     => $file,
+            ], $this->guessPreviewType($file));
+        }
+
+        return $config;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function render()
     {
+        // [Feature] 多图字段默认启用拖拽排序与单张删除（核心能力，无需业务单独开启）
+        $this->sortable();
+        $this->removable();
+
         $this->addElementClass('hasmany-multiple-image-'.$this->domKey());
         $this->id = 'hasmany-multiple-image-'.$this->domKey();
 

@@ -168,14 +168,14 @@ trait HandlesHasManyMultipleImage
      *
      * @param string $relatedModelClass 关联模型类名
      * @param mixed  $itemId            行主键
-     * @param mixed  $deleteKey         删除的图片索引（fileinput key）
+     * @param mixed  $path              要删除的图片路径（按值匹配，免疫索引错位）
      * @param string $column            图片列
      *
      * @return bool
      */
-    protected function deleteHasManyMultipleImage($relatedModelClass, $itemId, $deleteKey, $column = 'banner')
+    protected function deleteHasManyMultipleImage($relatedModelClass, $itemId, $path, $column = 'banner')
     {
-        if (!$itemId || !class_exists($relatedModelClass)) {
+        if (!$itemId || !$path || !class_exists($relatedModelClass)) {
             return false;
         }
 
@@ -187,17 +187,17 @@ trait HandlesHasManyMultipleImage
         }
 
         $images = $this->parseHasManyMultipleImageValue($related->getRawOriginal($column));
-        $index = $this->normalizeHasManyMultipleImageKey($deleteKey);
 
-        if (!array_key_exists($index, $images)) {
+        // 按路径值精确匹配移除；未命中（已不存在）同样视为成功，保证前端状态可收敛
+        $remaining = array_values(array_filter($images, function ($image) use ($path) {
+            return (string) $image !== (string) $path;
+        }));
+
+        if (count($remaining) === count($images)) {
             return true;
         }
 
-        unset($images[$index]);
-
-        $related->update([
-            $column => array_values($images),
-        ]);
+        $related->update([$column => $remaining]);
 
         return true;
     }
