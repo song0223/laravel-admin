@@ -50,6 +50,13 @@ class Tree implements Renderable
     protected $branchCallback = null;
 
     /**
+     * Tree path for request.
+     *
+     * @var string
+     */
+    protected $path = '/';
+
+    /**
      * @var bool
      */
     public $useCreate = true;
