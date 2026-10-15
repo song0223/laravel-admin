@@ -1,27 +1,36 @@
-> ## ⚠️ 安全维护分支说明（v1.8.19-secure）
+> ## ⚠️ 安全维护分支说明（1.9 / PHP 7.2-8.5 + Laravel 7-12）
 >
-> 本仓库是 `z-song/laravel-admin` **v1.8.1 → v1.8.19 基线的安全维护分支**（原作者已停止维护），修复了官方至今未修复的 **HandleController 未授权任意类实例化 RCE**（官方 v1.8.19 经逐行 diff 验证并未修复该漏洞，攻击者已在生产环境实战利用）。
+> 本仓库是 `z-song/laravel-admin` 的**安全维护分支**（原作者已停止维护），由 `v1.8.19` 基线升级而来。包名已改为 **`song0223/laravel-admin`**，并通过 `replace` 兼容旧包名 `encore/laravel-admin`（`laravel-admin-ext/*` 等旧扩展照常工作）；**代码命名空间仍为 `Encore\Admin`，项目代码零改动**。
 >
-> 相对官方 v1.8.19 仅改动两处文件：
+> ### 修复的安全漏洞（官方至今未修复，含 v1.8.19）
+>
+> **HandleController 未授权任意类实例化 RCE**（攻击者已在生产环境实战利用）：
 >
 > 1. **`src/Controllers/HandleController.php`**
 >    - 新增 `assertAuthenticated()`：`_handle_form_` / `_handle_action_` / `_handle_selectable_` / `_handle_renderable_` 四个入口先验 Admin guard 登录，未登录返回 403；
 >    - 新增 `assertAllowedClass()`：动态实例化的类必须在 `App\` 或 `Encore\Admin\` 命名空间下（类白名单），阻断 `GuzzleHttp\Client` 等任意类实例化 SSRF/RCE。
 > 2. **`src/Middleware/Pjax.php`**
->    - `handleErrorResponse()` 对 `$response->exception` 为 `null` 的错误响应（中间件直接返回的 4xx/5xx JSON）做友好展示，替代原版 `get_class(null)` 把真实错误放大成 500 并吞掉原始信息的问题。
+>    - `handleErrorResponse()` 对 `$response->exception` 为 `null` 的错误响应做友好展示，替代原版 `get_class(null)` 把真实错误放大成 500 并吞掉原始信息的问题。
 >
-> 使用方式（composer VCS + inline alias，包名保持 `encore/laravel-admin` 不变）：
+> ### 1.9 相对 v1.8.19 的兼容性升级
+>
+> - 支持 **PHP 7.2 ~ 8.5**（修复动态属性 deprecation 等，签名保持 PHP 7.x 兼容写法）
+> - 支持 **Laravel 7 ~ 12**（`symfony/dom-crawler ^6|^7`、`doctrine/dbal 4` 依赖矩阵更新）
+> - 已验证组合：PHP 8.5 + Laravel 12、PHP 7.4 + Laravel 8、PHP 7.4 + Laravel 7（含 laravel-admin-ext 扩展共存）
+> - 稳定线：`v1.8.19-secure` 分支/tag（仅安全补丁、不改依赖），保守项目可继续使用
+>
+> ### 使用方式
 >
 > ```json
 > "repositories": [
 >     {"type": "vcs", "url": "https://github.com/song0223/laravel-admin"}
 > ],
 > "require": {
->     "encore/laravel-admin": "dev-v1.8.19-secure as 1.8.19"
+>     "song0223/laravel-admin": "^1.9"
 > }
 > ```
 >
-> 除上述两处文件外，本分支与官方 v1.8.19 完全一致；后续新功能开发与 PHP 8 / Laravel 新版本适配将在此仓库独立分支推进。
+> 旧项目从 `encore/laravel-admin` 迁移：直接把 require 改为上面的写法即可，`Encore\Admin` 命名空间与全部 API 保持不变。
 
 <p align="center">
 <a href="https://laravel-admin.org/">
