@@ -2,7 +2,10 @@
 
 namespace Encore\Admin\Form\Field;
 
+use Closure;
 use Encore\Admin\Form\Field;
+use Encore\Admin\Form\NestedForm;
+use Encore\Admin\Form\NestedFormWhen;
 use Illuminate\Contracts\Support\Arrayable;
 
 class Radio extends Field
@@ -10,6 +13,20 @@ class Radio extends Field
     use CanCascadeFields;
 
     protected $inline = true;
+
+    /**
+     * 所属嵌套表单（hasMany 行），由 NestedForm::__call 注入。
+     *
+     * @var NestedForm|null
+     */
+    protected $nestedForm;
+
+    /**
+     * 嵌套 when 条件显示的联动脚本（由 NestedFormWhen 追加）。
+     *
+     * @var string
+     */
+    protected $nestedWhenScript = '';
 
     protected static $css = [
         '/vendor/laravel-admin/AdminLTE/plugins/iCheck/all.css',
@@ -98,6 +115,65 @@ class Radio extends Field
     }
 
     /**
+     * 注入所属嵌套表单（由 NestedForm::__call 自动调用）。
+     *
+     * @param NestedForm $nestedForm
+     *
+     * @return $this
+     */
+    public function setNestedForm(NestedForm $nestedForm)
+    {
+        $this->nestedForm = $nestedForm;
+
+        return $this;
+    }
+
+    /**
+     * [Feature] 嵌套表单（hasMany 行）内的条件显示：按本字段选中值
+     * 显示/隐藏同行闭包中的字段，行与行之间互不影响。
+     * 普通表单（非嵌套）仍走原生 CanCascadeFields::when 级联。
+     *
+     * 支持 when($value, $closure) 简写与原生 when($operator, $value, $closure) 全写。
+     *
+     * @param mixed    $operator
+     * @param mixed    $value
+     * @param Closure|null $closure
+     *
+     * @return $this
+     */
+    public function when($operator, $value, $closure = null)
+    {
+        if (func_num_args() == 2) {
+            $closure = $value;
+            $value = $operator;
+            $operator = '=';
+        }
+
+        if ($this->nestedForm instanceof NestedForm && $operator === '=' && $closure instanceof Closure) {
+            NestedFormWhen::make($this->nestedForm, $this)->when($value, $closure);
+
+            return $this;
+        }
+
+        // 原生级联：显式调用 trait 实现（when 已被本类覆盖，parent:: 不可用）
+        return CanCascadeFields::when($operator, $value, $closure);
+    }
+
+    /**
+     * 追加嵌套 when 联动脚本（由 NestedFormWhen 调用）。
+     *
+     * @param string $script
+     *
+     * @return $this
+     */
+    public function appendNestedWhenScript($script)
+    {
+        $this->nestedWhenScript .= "\n".$script;
+
+        return $this;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function render()
@@ -105,6 +181,10 @@ class Radio extends Field
         $this->script = "$('{$this->getElementClassSelector()}').iCheck({radioClass:'iradio_minimal-blue'});";
 
         $this->addCascadeScript();
+
+        if ($this->nestedWhenScript) {
+            $this->script .= "\n".$this->nestedWhenScript;
+        }
 
         $this->addVariables(['options' => $this->options, 'checked' => $this->checked, 'inline' => $this->inline]);
 

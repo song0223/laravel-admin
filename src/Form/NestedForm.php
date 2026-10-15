@@ -453,6 +453,11 @@ class NestedForm
                 $field->setForm($this->form);
             }
 
+            // 注入嵌套表单上下文，供字段实现嵌套级行内能力（如 Radio::when 条件显示）
+            if (method_exists($field, 'setNestedForm')) {
+                $field->setNestedForm($this);
+            }
+
             $field = $this->formatField($field);
 
             $this->pushField($field);
