@@ -2,6 +2,25 @@
 >
 > 本仓库是 `z-song/laravel-admin` 的**安全维护分支**（原作者已停止维护），由 `v1.8.19` 基线升级而来。包名已改为 **`song0223/laravel-admin`**，并通过 `replace` 兼容旧包名 `encore/laravel-admin`（`laravel-admin-ext/*` 等旧扩展照常工作）；**代码命名空间仍为 `Encore\Admin`，项目代码零改动**。
 >
+> ### ✨ 本分支新增功能（官方没有的）
+>
+> `hasMany` 嵌套表单两大增强，**直接内置、无需装扩展**（详细用法见 [docs/hasmany-features.md](docs/hasmany-features.md)）：
+>
+> **1. 嵌套行内条件显示（when）** —— 按行内 Radio 的选中值，动态显示/隐藏同一行的其它字段，行与行之间完全隔离：
+>
+> ```php
+> $form->radio('format', '形式')->options([...])->default('纸质书')
+>     ->when('电子书', function (NestedForm $form) {
+>         $form->text('download_url', '下载地址');
+>     });
+> ```
+>
+> **2. 嵌套行内多图上传**（上传 / 拖拽排序 / 单张删除）—— 图片路径以 JSON 数组存入嵌套行字段，排序随表单保存、单张删除即时落库：
+>
+> ```php
+> $form->hasmanyMultipleImage('banner', '封面图');
+> ```
+>
 > ### 修复的安全漏洞（官方至今未修复，含 v1.8.19）
 >
 > **HandleController 未授权任意类实例化 RCE**（攻击者已在生产环境实战利用）：
@@ -11,6 +30,12 @@
 >    - 新增 `assertAllowedClass()`：动态实例化的类必须在 `App\` 或 `Encore\Admin\` 命名空间下（类白名单），阻断 `GuzzleHttp\Client` 等任意类实例化 SSRF/RCE。
 > 2. **`src/Middleware/Pjax.php`**
 >    - `handleErrorResponse()` 对 `$response->exception` 为 `null` 的错误响应做友好展示，替代原版 `get_class(null)` 把真实错误放大成 500 并吞掉原始信息的问题。
+>
+> ### 其它实测修复
+>
+> - 多图**单张删除**改为按图片路径精确移除（修复错删），删除端点三层加固（Model 校验/列名校验/鉴权）
+> - 多图**拖拽排序**修复重复图片问题（order key 分类解析：路径=已有图、init_N=新上传图）
+> - 多图上传逐文件防御：0 字节/无效文件跳过并日志留痕，图片处理失败降级直存原文件
 >
 > ### 1.9 相对 v1.8.19 的兼容性升级
 >
