@@ -312,12 +312,19 @@ class HasMany extends Field
      */
     public function prepare($input)
     {
+        \Illuminate\Support\Facades\Log::debug('[HasMany][DEBUG] prepare input', [
+            'rowKeys'      => array_keys((array) $input),
+            'row4'         => array_keys((array) Arr::get($input, '4', [])),
+            'row4order'    => Arr::get($input, '4.banner__order'),
+        ]);
+
         $form = $this->buildNestedForm($this->column, $this->builder);
 
         $prepared = $form->setOriginal($this->original, $this->getKeyName())->prepare($input);
 
         // [Feature] HasManyMultipleImage 字段的行内拖拽排序：
-        // 按提交的 {column}__order 重排图片数组，随表单保存一并落库
+        // 用提交的 {column}__order（key 为图片路径或 init_N）统一重排
+        // "已有图 + 新上传图"的合并结果，随表单保存一并落库
         $imageColumns = [];
 
         foreach ($form->fields() as $field) {
@@ -333,13 +340,38 @@ class HasMany extends Field
         $originalRecords = $this->originalRecordsByKey();
 
         foreach ($input as $key => $record) {
+            $record = (array) $record;
+
             foreach ($imageColumns as $column) {
-                $prepared[$key] = HasManyMultipleImage::applyPreparedOrder(
-                    $prepared[$key] ?? [],
-                    (array) $record,
-                    Arr::get($originalRecords, "{$key}.{$column}"),
-                    $column
+                $order = Arr::get($record, $column.'__order');
+
+                if ($order === null) {
+                    continue;
+                }
+
+                $newPaths = Arr::get($prepared, "$key.$column", []);
+                $originalPaths = HasManyMultipleImage::parseValue(
+                    Arr::get($originalRecords, "$key.$column", [])
                 );
+
+                \Illuminate\Support\Facades\Log::debug('[HasMany][DEBUG] mergeAndSort args', [
+                    'newPaths'      => $newPaths,
+                    'originalPaths' => $originalPaths,
+                ]);
+
+                $row = $prepared[$key] ?? [];
+
+                $row = Arr::set(
+                    $row,
+                    $column,
+                    HasManyMultipleImage::mergeAndSort((array) $newPaths, $order, (array) $originalPaths)
+                );
+
+                \Illuminate\Support\Facades\Log::debug('[HasMany][DEBUG] after merge', [
+                    'banner_after' => Arr::get($row, $column),
+                ]);
+
+                $prepared[$key] = $row;
             }
         }
 

@@ -277,12 +277,86 @@ EOT;
         }
 
         Log::info('[HasManyMultipleImage] prepare result', [
-            'column'     => $this->column,
-            'received'   => count($files),
-            'stored'     => count($targets),
+            'column'   => $this->column,
+            'received' => count($files),
+            'stored'   => count($targets),
         ]);
 
-        return array_merge($this->sortOriginalFiles(), $targets);
+        // 仅返回本次新上传文件的路径；已有图与新文件的排序合并由
+        // HasMany::prepare 按 {column}__order 统一处理（见 mergeAndSort）
+        return $targets;
+    }
+
+    /**
+     * [Fix] 按前端拖拽顺序合并"已有图"与"新上传图"，供 HasMany::prepare 调用。
+     * 顺序数组（{column}__order）的 key 有两类：已有图为图片路径；
+     * 新上传图为 Krajee 的 init_N（对应新文件在本次提交中的下标）。
+     * 切勿将路径 key 强转数字索引——(int)"images/x.png" 恒为 0，会产生重复图片。
+     *
+     * @param array  $newPaths      本次新上传文件的路径列表（字段 prepare 的输出）
+     * @param mixed  $order         前端提交的顺序（JSON 字符串或数组），为空时保持原序追加
+     * @param array  $originalPaths 行内已有图片的路径列表
+     *
+     * @return array
+     */
+    public static function mergeAndSort(array $newPaths, $order, array $originalPaths)
+    {
+        $newPaths = array_values($newPaths);
+        $originalPaths = array_values($originalPaths);
+
+        if (empty($order)) {
+            return array_merge($originalPaths, $newPaths);
+        }
+
+        if (is_string($order)) {
+            $decoded = json_decode($order, true);
+            $order = is_array($decoded) ? $decoded : explode(',', $order);
+        }
+
+        if (!is_array($order)) {
+            return array_merge($originalPaths, $newPaths);
+        }
+
+        $result = [];
+        $usedNew = [];
+        $usedOriginal = [];
+
+        foreach ($order as $key) {
+            $key = (string) $key;
+
+            if (strpos($key, 'init_') === 0 || strpos($key, 'init-') === 0) {
+                $index = (int) substr($key, 5);
+
+                if (isset($newPaths[$index]) && ! isset($usedNew[$index])) {
+                    $result[] = $newPaths[$index];
+                    $usedNew[$index] = true;
+                }
+
+                continue;
+            }
+
+            $index = array_search($key, $originalPaths, true);
+
+            if ($index !== false && ! isset($usedOriginal[$index])) {
+                $result[] = $originalPaths[$index];
+                $usedOriginal[$index] = true;
+            }
+        }
+
+        // 未被拖拽顺序覆盖的已有图与新上传图，按各自原顺序追加
+        foreach ($originalPaths as $index => $path) {
+            if (! isset($usedOriginal[$index])) {
+                $result[] = $path;
+            }
+        }
+
+        foreach ($newPaths as $index => $path) {
+            if (! isset($usedNew[$index])) {
+                $result[] = $path;
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -308,108 +382,6 @@ EOT;
     }
 
     /**
-     * @param array $images
-     * @param mixed $order
-     * @return array
-     */
-    public static function sortByOrder(array $images, $order)
-    {
-        if (empty($images) || empty($order)) {
-            return array_values($images);
-        }
-
-        if (is_string($order)) {
-            $decoded = json_decode($order, true);
-            $order = is_array($decoded) ? $decoded : explode(',', $order);
-        }
-
-        if (!is_array($order) || empty($order)) {
-            return array_values($images);
-        }
-
-        $indexed = array_values($images);
-        $sorted = [];
-        $usedIndexes = [];
-
-        foreach ($order as $key) {
-            $index = static::normalizeStaticOrderKey($key);
-
-            if (!array_key_exists($index, $indexed)) {
-                continue;
-            }
-
-            $sorted[] = $indexed[$index];
-            $usedIndexes[$index] = true;
-        }
-
-        foreach ($indexed as $index => $image) {
-            if (isset($usedIndexes[$index])) {
-                continue;
-            }
-
-            $sorted[] = $image;
-        }
-
-        return array_values($sorted);
-    }
-
-    /**
-     * @param array  $prepared
-     * @param array  $record
-     * @param mixed  $original
-     * @param string $column
-     * @param string|null $orderKey
-     * @return array
-     */
-    public static function applyPreparedOrder(array $prepared, array $record, $original, $column, $orderKey = null)
-    {
-        $orderKey = $orderKey ?: $column.'__order';
-
-        if (!Arr::has($record, $orderKey)) {
-            return $prepared;
-        }
-
-        $existing = Arr::has($prepared, $column)
-            ? static::parseValue(Arr::get($prepared, $column))
-            : static::parseValue($original);
-
-        if (empty($existing)) {
-            return $prepared;
-        }
-
-        Arr::set($prepared, $column, static::sortByOrder($existing, Arr::get($record, $orderKey)));
-
-        return $prepared;
-    }
-
-    /**
-     * @return array
-     */
-    protected function sortOriginalFiles()
-    {
-        $original = static::parseValue($this->original());
-        $order = $this->sortOrder();
-
-        if (empty($original) || empty($order)) {
-            return $original;
-        }
-
-        $sorted = [];
-
-        foreach ($order as $key) {
-            $key = static::normalizeStaticOrderKey($key);
-
-            if (!array_key_exists($key, $original)) {
-                continue;
-            }
-
-            $sorted[] = $original[$key];
-        }
-
-        return $sorted;
-    }
-
-    /**
      * @return array
      */
     protected function sortOrder()
@@ -422,22 +394,6 @@ EOT;
         }
 
         return is_array($order) ? $order : [];
-    }
-
-    /**
-     * @param mixed $key
-     *
-     * @return int
-     */
-    protected static function normalizeStaticOrderKey($key)
-    {
-        $key = (string) $key;
-
-        if (strpos($key, 'init_') === 0 || strpos($key, 'init-') === 0) {
-            $key = substr($key, 5);
-        }
-
-        return (int) $key;
     }
 
     /**
