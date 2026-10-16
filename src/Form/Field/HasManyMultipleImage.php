@@ -2,7 +2,9 @@
 
 namespace Encore\Admin\Form\Field;
 
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 
 /**
  * [Feature] hasMany 嵌套行内的多图上传字段：支持多图上传、拖拽排序、单张删除。
@@ -247,7 +249,38 @@ EOT;
         }
 
         $files = is_array($files) ? $files : [];
-        $targets = array_map([$this, 'prepareForeach'], $files);
+
+        $targets = [];
+
+        foreach ($files as $file) {
+            // 防御：无效上传（超限/中断）与 0 字节文件（选择中断/读取失败的典型产物）跳过并留痕
+            if (! $file instanceof UploadedFile || ! $file->isValid() || $file->getSize() === 0) {
+                Log::warning('[HasManyMultipleImage] skip invalid uploaded file', [
+                    'name'  => $file instanceof UploadedFile ? $file->getClientOriginalName() : null,
+                    'error' => $file instanceof UploadedFile ? $file->getError() : null,
+                    'size'  => $file instanceof UploadedFile ? $file->getSize() : null,
+                ]);
+                continue;
+            }
+
+            try {
+                $targets[] = parent::prepareForeach($file);
+            } catch (\Throwable $e) {
+                // 降级：图片处理（Intervention 裁剪/缩略图）失败时直接存储原文件，避免整批丢失
+                Log::warning('[HasManyMultipleImage] image processing failed, store as-is', [
+                    'name' => $file->getClientOriginalName(),
+                    'err'  => $e->getMessage(),
+                ]);
+                $this->name = $this->getStoreName($file);
+                $targets[] = $this->upload($file);
+            }
+        }
+
+        Log::info('[HasManyMultipleImage] prepare result', [
+            'column'     => $this->column,
+            'received'   => count($files),
+            'stored'     => count($targets),
+        ]);
 
         return array_merge($this->sortOriginalFiles(), $targets);
     }
