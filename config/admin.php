@@ -201,6 +201,25 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Database-backed config (builtin)
+    |--------------------------------------------------------------------------
+    |
+    | Settings loaded from the admin_config table on every request, BEFORE
+    | the application boots, guarded by a name whitelist: only keys within
+    | the allowed prefixes are injected into the config repository, so a
+    | compromised admin_config table cannot hijack runtime behaviour
+    | (view.compiled, session.driver, ...). Extension metadata rows
+    | (`__`-prefixed, e.g. configx) are skipped silently.
+    |
+    */
+    'database_config' => [
+        'enable'          => true,
+        'table'           => 'admin_config',
+        'allowed_prefixes' => ['base.'],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | User operation log setting
     |--------------------------------------------------------------------------
     |

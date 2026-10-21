@@ -323,6 +323,9 @@ class Admin
                 $router->resource('auth/menu', 'MenuController', ['except' => ['create']])->names('admin.auth.menu');
                 $router->resource('auth/logs', 'LogController', ['only' => ['index', 'destroy']])->names('admin.auth.logs');
 
+                /* [Feature] database-backed config with whitelist guard (builtin) */
+                $router->resource('config', 'ConfigController', ['except' => ['show']])->names('admin.config');
+
                 $router->post('_handle_form_', 'HandleController@handleForm')->name('admin.handle-form');
                 $router->post('_handle_action_', 'HandleController@handleAction')->name('admin.handle-action');
                 $router->get('_handle_selectable_', 'HandleController@handleSelectable')->name('admin.handle-selectable');

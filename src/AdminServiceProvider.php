@@ -72,6 +72,10 @@ class AdminServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        // database-backed config with whitelist guard, runs before anything
+        // else so the loaded values are available to the whole app
+        \Encore\Admin\Config\Config::tryLoad();
+
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'admin');
 
         $this->ensureHttps();
