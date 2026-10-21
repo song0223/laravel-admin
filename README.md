@@ -21,6 +21,19 @@
 > $form->hasmanyMultipleImage('banner', '封面图');
 > ```
 >
+> **3. 数据库配置（内置，替代 laravel-admin-ext/config，v1.10.0 起）**
+>
+> 每次请求自动从 `admin_config` 表加载配置（`AdminServiceProvider::boot` 阶段执行），**白名单防护内置**：只注入 `admin.database_config.allowed_prefixes`（默认 `base.*`）前缀内的键，危险键（`view.compiled` / `session.driver` 等）写入即被拒绝并记日志——admin_config 表即使被攻破也无法劫持运行时行为。后台编辑页 `/admin/config`，建表+菜单迁移：`vendor:publish --tag=laravel-admin-migrations && php artisan migrate`（表已存在则跳过）。
+>
+> **4. 列表图片灯箱（内置，替代 laravel-admin-ext/grid-lightbox，v1.10.0 起）**
+>
+> ```php
+> $grid->column('picture')->lightbox(['zooming' => true, 'width' => 60, 'height' => 60]);
+> $grid->column('gallery')->gallery(); // 多图左右切换
+> ```
+>
+> ⚠️ **从扩展切换到内置**：`composer remove laravel-admin-ext/config laravel-admin-ext/grid-lightbox`（类同名，同时装会遮蔽；configx 因依赖 config 扩展包需一并移除，需要分组编辑的项目暂留 v1.9.x）。
+>
 > ### 修复的安全漏洞（官方至今未修复，含 v1.8.19）
 >
 > **HandleController 未授权任意类实例化 RCE**（攻击者已在生产环境实战利用）：
