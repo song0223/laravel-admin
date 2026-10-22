@@ -10,7 +10,11 @@ use Illuminate\Contracts\Support\Arrayable;
 
 class Radio extends Field
 {
-    use CanCascadeFields;
+    // PHP 8 起禁止以 TraitName::method() 静态语法调用 trait 非静态方法,
+    // 别名保留一条直接调用原生级联 when 的通道(见本类 when() 覆盖)
+    use CanCascadeFields {
+        when as whenCascade;
+    }
 
     protected $inline = true;
 
@@ -156,7 +160,7 @@ class Radio extends Field
         }
 
         // 原生级联：显式调用 trait 实现（when 已被本类覆盖，parent:: 不可用）
-        return CanCascadeFields::when($operator, $value, $closure);
+        return $this->whenCascade($operator, $value, $closure);
     }
 
     /**
