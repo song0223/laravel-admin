@@ -75,7 +75,32 @@ class Menu extends Model
             $query->with('roles');
         }
 
-        return $query->selectRaw('*, '.$orderColumn.' ROOT')->orderByRaw($byOrder)->get()->toArray();
+        $nodes = $query->selectRaw('*, '.$orderColumn.' ROOT')->orderByRaw($byOrder)->get()->toArray();
+
+        // [Feature] 多语言菜单标题: 配置 admin.database_config.menu_translation_table 后,
+        // 按 app locale 从翻译表取标题替换(列约定: locale / 主键外键列 / title),
+        // 翻译缺失或表不可用时静默保留主表 title。配合后台语言切换中间件使用。
+        if ($table = config('admin.database_config.menu_translation_table')) {
+            $locale = app()->getLocale();
+            $menuKey = config('admin.database_config.menu_translation_menu_key', 'menu_id');
+            try {
+                $map = DB::connection($connection)->table($table)
+                    ->where('locale', $locale)
+                    ->pluck('title', $menuKey)
+                    ->all();
+                foreach ($nodes as &$node) {
+                    $translated = $map[$node['id']] ?? null;
+                    if (is_string($translated) && $translated !== '') {
+                        $node['title'] = $translated;
+                    }
+                }
+                unset($node);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('menu translation skipped: '.$e->getMessage());
+            }
+        }
+
+        return $nodes;
     }
 
     /**
