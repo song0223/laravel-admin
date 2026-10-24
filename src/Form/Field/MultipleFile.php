@@ -166,7 +166,18 @@ class MultipleFile extends Field
             return [];
         }
 
-        return $this->original;
+        $original = $this->original;
+
+        // the persisted value is a json string (or a legacy comma-separated
+        // list) - decode before merging, array_merge() on a raw string
+        // throws a TypeError
+        if (is_string($original)) {
+            $decoded = json_decode($original, true);
+
+            $original = is_array($decoded) ? $decoded : array_filter(explode(',', $original));
+        }
+
+        return is_array($original) ? $original : [];
     }
 
     /**
