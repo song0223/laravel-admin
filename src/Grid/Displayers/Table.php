@@ -8,6 +8,21 @@ class Table extends AbstractDisplayer
 {
     public function display($titles = [])
     {
+        if ($this->value instanceof \Illuminate\Contracts\Support\Arrayable) {
+            $this->value = $this->value->toArray();
+        }
+
+        // the persisted value may be a json string - decode before array_keys
+        if (is_string($this->value)) {
+            $decoded = json_decode($this->value, true);
+
+            $this->value = is_array($decoded) ? $decoded : [];
+        }
+
+        $this->value = array_values(array_filter((array) $this->value, function ($item) {
+            return is_array($item);
+        }));
+
         if (empty($this->value)) {
             return '';
         }

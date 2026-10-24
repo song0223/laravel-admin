@@ -10,11 +10,11 @@ class Handler
     /**
      * Render exception.
      *
-     * @param \Exception $exception
+     * @param \Throwable $exception
      *
      * @return string
      */
-    public static function renderException(\Exception $exception)
+    public static function renderException(\Throwable $exception)
     {
         $error = new MessageBag([
             'type'    => get_class($exception),

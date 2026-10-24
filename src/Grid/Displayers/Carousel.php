@@ -14,7 +14,15 @@ class Carousel extends AbstractDisplayer
             $this->value = $this->value->toArray();
         }
 
-        $this->value = array_values($this->value);
+        // the persisted value may be a json string - decode before touching
+        // it as an array (array_values on a string throws on PHP 8)
+        if (is_string($this->value)) {
+            $decoded = json_decode($this->value, true);
+
+            $this->value = is_array($decoded) ? $decoded : [];
+        }
+
+        $this->value = array_values((array) $this->value);
 
         if (empty($this->value)) {
             return '';

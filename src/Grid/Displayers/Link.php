@@ -13,6 +13,14 @@ class Link extends AbstractDisplayer
             $href = $callback ?: $this->value;
         }
 
-        return "<a href='$href' target='$target'>{$this->value}</a>";
+        // [Security] escape both sides and refuse javascript:/data: schemes
+        // - the value comes from the DB and used to land raw in the href
+        $href = (string) $href;
+        if (preg_match('/^\s*(javascript|data|vbscript)\s*:/i', $href)) {
+            $href = '#';
+        }
+        $href = e($href);
+
+        return "<a href='$href' target='$target'>".e($this->value).'</a>';
     }
 }

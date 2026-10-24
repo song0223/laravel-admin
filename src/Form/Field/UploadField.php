@@ -247,7 +247,7 @@ trait UploadField
     {
         try {
             $this->storage = Storage::disk($disk);
-        } catch (\Exception $exception) {
+        } catch (\Throwable $exception) {
             if (!array_key_exists($disk, config('filesystems.disks'))) {
                 admin_error(
                     'Config error.',

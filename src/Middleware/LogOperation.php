@@ -25,17 +25,49 @@ class LogOperation
                 'path'    => substr($request->path(), 0, 255),
                 'method'  => $request->method(),
                 'ip'      => $request->getClientIp(),
-                'input'   => json_encode($request->input()),
+                'input'   => json_encode($this->maskSensitiveInput($request->input())),
             ];
 
             try {
                 OperationLogModel::create($log);
-            } catch (\Exception $exception) {
+            } catch (\Throwable $exception) {
                 // pass
             }
         }
 
         return $next($request);
+    }
+
+    /**
+     * [Security] mask sensitive request values before they hit the log table
+     * - a raw json_encode used to persist plaintext passwords whenever an
+     * admin created/updated a user. Keys matched case-insensitively against
+     * a configurable pattern list.
+     *
+     * @param mixed $input
+     *
+     * @return mixed
+     */
+    protected function maskSensitiveInput($input)
+    {
+        $pattern = (string) config('admin.operation_log.mask_keys_pattern', 'pass|password|pwd|secret|token|key');
+
+        if (empty($pattern) || !is_array($input)) {
+            return $input;
+        }
+
+        // config-provided pattern: escape regex delimiters defensively
+        $pattern = str_replace('/', '\/', $pattern);
+
+        array_walk($input, function (&$value, $key) use ($pattern) {
+            if (is_array($value)) {
+                $value = $this->maskSensitiveInput($value);
+            } elseif (preg_match('/('.$pattern.')/i', (string) $key)) {
+                $value = '******';
+            }
+        });
+
+        return $input;
     }
 
     /**

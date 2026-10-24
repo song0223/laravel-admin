@@ -33,7 +33,7 @@ class Delete extends RowAction
             DB::transaction(function () use ($model) {
                 $model->delete();
             });
-        } catch (\Exception $exception) {
+        } catch (\Throwable $exception) {
             return $this->response()->error("{$trans['failed']} : {$exception->getMessage()}");
         }
 

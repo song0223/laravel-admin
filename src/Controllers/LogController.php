@@ -30,7 +30,7 @@ class LogController extends AdminController
         $grid->column('method')->display(function ($method) {
             $color = Arr::get(OperationLog::$methodColors, $method, 'grey');
 
-            return "<span class=\"badge bg-$color\">$method</span>";
+            return "<span class=\"badge bg-$color\">".e($method).'</span>';
         });
         $grid->column('path')->label('info');
         $grid->column('ip')->label('primary');

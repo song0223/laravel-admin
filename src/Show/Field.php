@@ -232,6 +232,9 @@ class Field implements Renderable
                     }
                 }
 
+                // [Security] escape before embedding, the value comes from the DB
+                $src = e($src);
+
                 return "<img src='$src' style='max-width:{$width}px;max-height:{$height}px' class='img' />";
             })->implode('&nbsp;');
         });
@@ -311,6 +314,13 @@ class Field implements Renderable
             if (!$url) {
                 return '';
             }
+
+            // [Security] escape before embedding, values come from the DB
+            $name = e($name);
+            if (preg_match('/^\s*(javascript|data|vbscript)\s*:/i', $url)) {
+                $url = '#';
+            }
+            $url = e($url);
 
             $download = $download ? "download='$name'" : '';
 

@@ -22,6 +22,9 @@ class Image extends AbstractDisplayer
                 $src = Storage::disk(config('admin.upload.disk'))->url($path);
             }
 
+            // [Security] escape before embedding, the value comes from the DB
+            $src = e($src);
+
             return "<img src='$src' style='max-width:{$width}px;max-height:{$height}px' class='img img-thumbnail' />";
         })->implode('&nbsp;');
     }

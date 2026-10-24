@@ -474,13 +474,18 @@ class Model
     protected function resolvePerPage($paginate)
     {
         if ($perPage = request($this->perPageName)) {
+            // [Security] cap the client-controlled page size, a huge per_page
+            // would load and render the whole table in one request
+            $max = (int) config('admin.grid.per_page_max', 500);
+            $perPage = min(max((int) $perPage, 1), max($max, 1));
+
             if (is_array($paginate)) {
-                $paginate['arguments'][0] = (int) $perPage;
+                $paginate['arguments'][0] = $perPage;
 
                 return $paginate['arguments'];
             }
 
-            $this->perPage = (int) $perPage;
+            $this->perPage = $perPage;
         }
 
         if (isset($paginate['arguments'][0])) {
@@ -521,8 +526,23 @@ class Model
         }
 
         $columnName = $this->sort['column'] ?? null;
-        if ($columnName === null || empty($this->sort['type'])) {
+        $sortType = strtolower((string) ($this->sort['type'] ?? ''));
+
+        if ($columnName === null || !in_array($sortType, ['asc', 'desc'], true)) {
             return;
+        }
+
+        // [Security] the column must be one actually registered on this grid
+        // (dot suffixes allowed for json paths) - raw request values used to
+        // flow unchecked into CAST()/JSON_EXTRACT() raw orderBy expressions
+        if ($this->grid && $columns = $this->grid->columns()) {
+            $registered = $columns->map(function ($column) {
+                return $column->getName();
+            })->filter()->all();
+
+            if ($registered && !in_array(Str::before($columnName, '.'), $registered, true)) {
+                return;
+            }
         }
 
         $columnNameContainsDots = Str::contains($columnName, '.');
@@ -543,18 +563,27 @@ class Model
                 $explodedCols = explode('.', $this->sort['column']);
                 $col = array_shift($explodedCols);
                 $parts = implode('.', $explodedCols);
+
+                // [Security] json path segments: word chars, dashes and $ only
+                if (!preg_match('/^[\w\-$]+$/', $parts)) {
+                    return;
+                }
+
                 $columnName = "JSON_EXTRACT({$col}, '$.{$parts}')";
             }
 
             // get column. if contains "cast", set set column as cast
-            if (!empty($this->sort['cast'])) {
-                $column = "CAST({$columnName} AS {$this->sort['cast']}) {$this->sort['type']}";
+            $cast = strtoupper((string) ($this->sort['cast'] ?? ''));
+            $allowedCasts = ['SIGNED', 'UNSIGNED', 'CHAR', 'DATE', 'DATETIME', 'TIME', 'DECIMAL'];
+
+            if ($cast && in_array($cast, $allowedCasts, true)) {
+                $column = "CAST({$columnName} AS {$cast}) {$sortType}";
                 $method = 'orderByRaw';
                 $arguments = [$column];
             } else {
                 $column = $columnNameContainsDots ? new Expression($columnName) : $columnName;
                 $method = 'orderBy';
-                $arguments = [$column, $this->sort['type']];
+                $arguments = [$column, $sortType];
             }
 
             $this->queries->push([

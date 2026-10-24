@@ -139,6 +139,18 @@ return [
             'auth/login',
             'auth/logout',
         ],
+
+        /*
+         * [Security] 登录节流（防爆破）。默认宽松：同 IP 60 秒窗口内允许
+         * 10 次失败尝试，成功登录即清零，正常使用不会触发。
+         * 设 'enable' => false 可完全关闭。
+         */
+        'throttle' => [
+            'enable'         => true,
+            'max_attempts'   => 10,   // 窗口内最大失败次数
+            'decay_seconds'  => 60,   // 计数窗口（秒）
+            'lockout_seconds' => 60,  // 触发后提示等待（秒）
+        ],
     ],
 
     /*
@@ -244,6 +256,42 @@ return [
         'except' => [
             env('ADMIN_ROUTE_PREFIX', 'admin').'/auth/logs*',
         ],
+
+        /*
+         * [Security] 写入日志前按键名遮蔽敏感值（正则，大小写不敏感）。
+         * 防止后台改密码时明文密码永久留在 admin_operation_log 表里。
+         * 置空字符串可关闭遮蔽。
+         */
+        'mask_keys_pattern' => 'pass|password|pwd|secret|token|key',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Grid settings
+    |--------------------------------------------------------------------------
+    |
+    */
+    'grid' => [
+
+        /*
+         * [Security] ?per_page= 客户端可控的每页条数上限，
+         * 防止单请求拉全表（内存耗尽）。
+         */
+        'per_page_max' => 500,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | hasMany multiple-image delete endpoint
+    |--------------------------------------------------------------------------
+    |
+    | [Security] /admin/hasmany-multiple-image/delete 的模型白名单。
+    | 空 = 不限制（默认，兼容现状）；配置类名数组后仅允许列出的模型，
+    | 例：[App\Models\Book::class]
+    |
+    */
+    'hasmany_multiple_image' => [
+        'allowed_models' => [],
     ],
 
     /*

@@ -34,17 +34,20 @@ SCRIPT;
 
         $img = sprintf(
             "<img src='https://api.qrserver.com/v1/create-qr-code/?size=%sx%s&data=%s' style='height:%spx;width:%spx;'/>",
-            $width,
-            $height,
-            $content,
-            $height,
-            $width
+            (int) $width,
+            (int) $height,
+            urlencode(e((string) $content)),
+            (int) $height,
+            (int) $width
         );
+
+        // [Security] escape the raw value before it lands in html
+        $value = e($this->getValue());
 
         return <<<HTML
 <a href="javascript:void(0);" class="grid-column-qrcode text-muted" data-content="{$img}" data-toggle='popover' tabindex='0'>
     <i class="fa fa-qrcode"></i>
-</a>&nbsp;{$this->getValue()}
+</a>&nbsp;{$value}
 HTML;
     }
 }

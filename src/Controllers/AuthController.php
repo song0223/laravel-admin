@@ -9,8 +9,10 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -42,13 +44,54 @@ class AuthController extends Controller
      */
     public function postLogin(Request $request)
     {
+        // [Security] configurable login throttling (admin.auth.throttle);
+        // generous defaults so a shared office ip is never locked out
+        $throttle = (array) config('admin.auth.throttle', [
+            'enable'          => true,
+            'max_attempts'    => 10,
+            'decay_seconds'   => 60,
+            'lockout_seconds' => 60,
+        ]);
+
+        $maxAttempts = (int) ($throttle['max_attempts'] ?? 10);
+        $decaySeconds = max((int) ($throttle['decay_seconds'] ?? 60), 1);
+        $lockoutSeconds = max((int) ($throttle['lockout_seconds'] ?? 60), 1);
+        $key = null;
+
+        if (!empty($throttle['enable']) && $maxAttempts > 0) {
+            $key = 'admin-login:'.hash('sha256', (string) $request->ip());
+
+            if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
+                $seconds = max(RateLimiter::availableIn($key), $lockoutSeconds);
+
+                $message = trans('admin.too_many_login_attempts', ['seconds' => $seconds]);
+
+                if ($message === 'admin.too_many_login_attempts') {
+                    // translation key not shipped yet - inline fallback
+                    $message = "尝试过于频繁，请 {$seconds} 秒后再试 (too many attempts)";
+                }
+
+                throw ValidationException::withMessages([
+                    $this->username() => $message,
+                ]);
+            }
+        }
+
         $this->loginValidator($request->all())->validate();
 
         $credentials = $request->only([$this->username(), 'password']);
         $remember = $request->get('remember', false);
 
         if ($this->guard()->attempt($credentials, $remember)) {
+            if ($key !== null) {
+                RateLimiter::clear($key);
+            }
+
             return $this->sendLoginResponse($request);
+        }
+
+        if ($key !== null) {
+            RateLimiter::hit($key, $decaySeconds);
         }
 
         return back()->withInput()->withErrors([

@@ -28,6 +28,13 @@ class Downloadable extends AbstractDisplayer
 
             $name = basename($value);
 
+            // [Security] escape before embedding, block script-capable schemes
+            if (preg_match('/^\s*(javascript|data|vbscript)\s*:/i', $src)) {
+                $src = '#';
+            }
+            $src = e($src);
+            $name = e($name);
+
             return <<<HTML
 <a href='$src' download='{$name}' target='_blank' class='text-muted'>
     <i class="fa fa-download"></i> {$name}

@@ -26,7 +26,10 @@ class Label extends AbstractDisplayer
                 }
             }
 
-            return "<span class='label label-{$style}'>$item</span>";
+            // [Security] the value lands inside the span raw
+            $style = e($style);
+
+            return "<span class='label label-{$style}'>".e($item).'</span>';
         })->implode('&nbsp;');
     }
 }

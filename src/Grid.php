@@ -928,7 +928,7 @@ class Grid
 
         try {
             $this->build();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return Handler::renderException($e);
         }
 
