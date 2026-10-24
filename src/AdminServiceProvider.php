@@ -2,6 +2,7 @@
 
 namespace Encore\Admin;
 
+use Encore\Admin\Admin;
 use Encore\Admin\Layout\Content;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Arr;
@@ -75,6 +76,13 @@ class AdminServiceProvider extends ServiceProvider
         // database-backed config with whitelist guard, runs before anything
         // else so the loaded values are available to the whole app
         \Encore\Admin\Config\Config::tryLoad();
+
+        // magnific-popup assets register globally (like AdminLTE assets):
+        // per-displayer injection breaks under pjax, where a <script src>
+        // appended to the fragment loads async while the init script is
+        // globalEval'd immediately -> "$(...).magnificPopup is not a function"
+        Admin::css('vendor/laravel-admin/magnific-popup/magnific-popup.css');
+        Admin::js('vendor/laravel-admin/magnific-popup/jquery.magnific-popup.min.js');
 
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'admin');
 

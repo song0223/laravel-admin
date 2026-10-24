@@ -18,13 +18,6 @@ class Lightbox extends AbstractDisplayer
         'type' => 'image',
     ];
 
-    /**
-     * Whether the magnific-popup assets are already queued.
-     *
-     * @var bool
-     */
-    protected static $assetsQueued = false;
-
     protected function script()
     {
         $options = json_encode($this->options);
@@ -32,18 +25,6 @@ class Lightbox extends AbstractDisplayer
         return <<<SCRIPT
 $('.grid-popup-link').magnificPopup($options);
 SCRIPT;
-    }
-
-    protected function addAssets()
-    {
-        if (static::$assetsQueued) {
-            return;
-        }
-
-        Admin::css('vendor/laravel-admin/magnific-popup/magnific-popup.css');
-        Admin::js('vendor/laravel-admin/magnific-popup/jquery.magnific-popup.min.js');
-
-        static::$assetsQueued = true;
     }
 
     /**
@@ -84,8 +65,6 @@ SCRIPT;
         if (Arr::get($options, 'zooming')) {
             $this->zooming();
         }
-
-        $this->addAssets();
 
         Admin::script($this->script());
 
