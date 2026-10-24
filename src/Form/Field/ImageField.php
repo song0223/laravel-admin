@@ -178,6 +178,11 @@ trait ImageField
      */
     protected function uploadAndDeleteOriginalThumbnail(UploadedFile $file)
     {
+        // [Perf] decode the source image once and clone per size - the loop
+        // used to re-decode the full original for every thumbnail (N sizes =
+        // N full decodes of the same file, all synchronous in the request)
+        $source = InterventionImage::make($file);
+
         foreach ($this->thumbnails as $name => $size) {
             // We need to get extension type ( .jpeg , .png ...)
             $ext = pathinfo($this->name, PATHINFO_EXTENSION);
@@ -189,7 +194,7 @@ trait ImageField
             $path = $path.'-'.$name.'.'.$ext;
 
             /** @var \Intervention\Image\Image $image */
-            $image = InterventionImage::make($file);
+            $image = method_exists($source, 'clone') ? $source->clone() : clone $source;
 
             $action = $size[2] ?? 'resize';
             // Resize image with aspect ratio

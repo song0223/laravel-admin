@@ -10,7 +10,8 @@
 
         <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
         @foreach($errors->getBag("error")->toArray() as $message)
-            <p>{!!  \Illuminate\Support\Arr::get($message, 0) !!}</p>
+            {{-- [Security] validation messages may embed user input --}}
+            <p>{{ \Illuminate\Support\Arr::get($message, 0) }}</p>
         @endforeach
       </div>
     @endif

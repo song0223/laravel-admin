@@ -7,8 +7,8 @@
 <script>
     $('.{{ $class }}').bootstrapSwitch({
         size:'mini',
-        onText: '{{ $states['on']['text'] }}',
-        offText: '{{ $states['off']['text'] }}',
+        onText: {!! json_encode($states['on']['text']) !!},
+        offText: {!! json_encode($states['off']['text']) !!},
         onColor: '{{ $states['on']['color'] }}',
         offColor: '{{ $states['off']['color'] }}',
         onSwitchChange: function(event, state){

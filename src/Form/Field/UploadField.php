@@ -254,6 +254,15 @@ trait UploadField
                     "Disk [$disk] not configured, please add a disk config in `config/filesystems.php`."
                 );
 
+                // fall back to the default admin disk so later storage calls
+                // don't fatal "on null" far away from the root cause
+                try {
+                    $this->storage = Storage::disk(config('admin.upload.disk', 'admin'));
+                } catch (\Throwable $e) {
+                    // both disks broken - leave null, the admin_error above
+                    // already explains the problem on the page
+                }
+
                 return $this;
             }
 
