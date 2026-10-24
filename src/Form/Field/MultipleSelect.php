@@ -61,7 +61,12 @@ class MultipleSelect extends Select
         $relations = Arr::get($data, $key);
 
         if (is_string($relations)) {
-            $this->value = explode(',', $relations);
+            // accept both comma-separated (the documented format) and json
+            // (what an array attribute persists as when the model has an
+            // array/json cast)
+            $decoded = json_decode($relations, true);
+
+            $this->value = is_array($decoded) ? $decoded : array_filter(explode(',', $relations), 'strlen');
         }
 
         if (!is_array($relations)) {
@@ -97,7 +102,9 @@ class MultipleSelect extends Select
         $relations = Arr::get($data, $this->column);
 
         if (is_string($relations)) {
-            $this->original = explode(',', $relations);
+            $decoded = json_decode($relations, true);
+
+            $this->original = is_array($decoded) ? $decoded : array_filter(explode(',', $relations), 'strlen');
         }
 
         if (!is_array($relations)) {
@@ -123,8 +130,17 @@ class MultipleSelect extends Select
 
     public function prepare($value)
     {
-        $value = (array) $value;
+        $value = array_values(array_filter((array) $value, 'strlen'));
 
-        return array_filter($value, 'strlen');
+        // relation columns (BelongsToMany/HasMany) are consumed as arrays by
+        // the relation flow; plain columns persist as a comma-separated
+        // string - handing an array to the insert/update binder throws
+        // "Array to string conversion". method_exists, not is_callable:
+        // Model::__call makes is_callable true for ANY name.
+        if ($this->form && $this->form->model() && method_exists($this->form->model(), $this->column)) {
+            return $value;
+        }
+
+        return implode(',', $value);
     }
 }
