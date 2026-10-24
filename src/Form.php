@@ -147,6 +147,12 @@ class Form implements Renderable
     {
         $field->setForm($this);
 
+        // [Perf] queue field assets at build time (controller stage, before
+        // the layout renders) - pages only load what their forms actually
+        // use. Grid/filter pages keep getting core field assets via
+        // collectFieldAssets().
+        $field::registerAssets();
+
         $width = $this->builder->getWidth();
         $field->setWidth($width['field'], $width['label']);
 

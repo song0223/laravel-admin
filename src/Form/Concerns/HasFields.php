@@ -133,6 +133,15 @@ trait HasFields
     public static $fieldAlias = [];
 
     /**
+     * Classes registered at runtime through Form::extend() (extensions).
+     * Their assets load on demand when a field actually joins a form
+     * (Form::pushField), instead of on every admin page.
+     *
+     * @var array
+     */
+    public static $extendedFields = [];
+
+    /**
      * Register custom field.
      *
      * @param string $abstract
@@ -143,6 +152,13 @@ trait HasFields
     public static function extend($abstract, $class)
     {
         static::$availableFields[$abstract] = $class;
+
+        // track extension-provided fields so collectFieldAssets() can skip
+        // their (often heavy) assets - e.g. an installed editor extension
+        // used to ship its 1MB+ bundle to every single admin page
+        if (!in_array($class, static::$extendedFields, true)) {
+            static::$extendedFields[] = $class;
+        }
     }
 
     /**
@@ -206,6 +222,14 @@ trait HasFields
         $js = collect();
 
         foreach (static::$availableFields as $field) {
+            // [Perf] extension fields (Form::extend) load on demand via
+            // Form::pushField() - only pages that actually use them pay
+            // for their assets. Core fields stay globally available for
+            // grid/filter pages that render without a Form.
+            if (in_array($field, static::$extendedFields, true)) {
+                continue;
+            }
+
             if (!method_exists($field, 'getAssets')) {
                 continue;
             }

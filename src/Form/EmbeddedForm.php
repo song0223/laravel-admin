@@ -265,6 +265,9 @@ class EmbeddedForm
     {
         $field = $this->formatField($field);
 
+        // [Perf] on-demand field assets (see Form::pushField)
+        $field::registerAssets();
+
         $this->fields->push($field);
 
         return $this;

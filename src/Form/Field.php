@@ -285,6 +285,26 @@ class Field implements Renderable
     }
 
     /**
+     * Queue this field class' static assets with Admin right now.
+     * Called when a field instance joins a form (controller stage, before
+     * the layout renders) so extension field assets load only on pages
+     * that actually use the field.
+     *
+     * @return void
+     */
+    public static function registerAssets()
+    {
+        if ($assets = static::getAssets()) {
+            if (!empty($assets['css'])) {
+                Admin::css($assets['css']);
+            }
+            if (!empty($assets['js'])) {
+                Admin::js($assets['js']);
+            }
+        }
+    }
+
+    /**
      * Format the field column name.
      *
      * @param string $column
