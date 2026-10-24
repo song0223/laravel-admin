@@ -683,7 +683,9 @@ class Form implements Renderable
     protected function handleFileDelete(array $input = []): array
     {
         if (array_key_exists(Field::FILE_DELETE_FLAG, $input)) {
-            $input[Field::FILE_DELETE_FLAG] = $input['key'];
+            // fileinput posts `key`; fall back to the flag value itself when
+            // a client submitted _file_del_ directly
+            $input[Field::FILE_DELETE_FLAG] = $input['key'] ?? $input[Field::FILE_DELETE_FLAG];
             unset($input['key']);
         }
 

@@ -393,11 +393,11 @@ EOT;
      */
     public function destroy($key)
     {
-        $files = $this->original ?: [];
+        $files = $this->original();
 
         $path = Arr::get($files, $key);
 
-        if (!$this->retainable && $this->storage->exists($path)) {
+        if ($path && !$this->retainable && $this->storage->exists($path)) {
             /* If this field class is using ImageField trait i.e MultipleImage field,
             we loop through the thumbnails to delete them as well. */
 
@@ -411,7 +411,9 @@ EOT;
 
         unset($files[$key]);
 
-        return $files;
+        // re-index: an unset mid-list key would json-encode into an object
+        // ({"0":...,"2":...}) instead of an array
+        return array_values($files);
     }
 
     /**
@@ -423,11 +425,11 @@ EOT;
      */
     public function destroyFromHasMany($key)
     {
-        $files = collect($this->original ?: [])->keyBy($this->getRelatedKeyName())->toArray();
+        $files = collect($this->original())->keyBy($this->getRelatedKeyName())->toArray();
 
         $path = Arr::get($files, "{$key}.{$this->pathColumn}");
 
-        if (!$this->retainable && $this->storage->exists($path)) {
+        if ($path && !$this->retainable && $this->storage->exists($path)) {
             $this->storage->delete($path);
         }
 
