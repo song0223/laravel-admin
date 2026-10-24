@@ -5,6 +5,7 @@ namespace Encore\Admin\Form\Field;
 use Encore\Admin\Form;
 use Encore\Admin\Form\Field;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class MultipleFile extends Field
@@ -152,9 +153,24 @@ class MultipleFile extends Field
             $targets = array_map(function ($target) {
                 return [$this->pathColumn => $target];
             }, $targets);
+
+            return array_merge($this->original(), $targets);
         }
 
-        return array_merge($this->original(), $targets);
+        $merged = array_merge($this->original(), $targets);
+
+        // hand the raw array to hasmany-relation flows or a custom
+        // setXxxAttribute mutator (the migrating-project pattern); a plain
+        // column persists as a json string - an array handed to the
+        // insert/update binder throws "Array to string conversion"
+        $model = $this->form ? $this->form->model() : null;
+
+        if ($model && (method_exists($model, $this->column)
+            || method_exists($model, 'set'.Str::studly($this->column).'Attribute'))) {
+            return $merged;
+        }
+
+        return json_encode($merged);
     }
 
     /**

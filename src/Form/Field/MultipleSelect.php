@@ -132,12 +132,20 @@ class MultipleSelect extends Select
     {
         $value = array_values(array_filter((array) $value, 'strlen'));
 
-        // relation columns (BelongsToMany/HasMany) are consumed as arrays by
-        // the relation flow; plain columns persist as a comma-separated
-        // string - handing an array to the insert/update binder throws
-        // "Array to string conversion". method_exists, not is_callable:
-        // Model::__call makes is_callable true for ANY name.
-        if ($this->form && $this->form->model() && method_exists($this->form->model(), $this->column)) {
+        $model = $this->form ? $this->form->model() : null;
+
+        // hand the raw array to the relation flow or to a custom mutator
+        // (setXxxAttribute - the migrating-project pattern), the owner is
+        // responsible for stringifying. Plain columns persist as the
+        // documented comma-separated string - handing an array to the
+        // insert/update binder throws "Array to string conversion".
+        // method_exists, not is_callable: Model::__call makes is_callable
+        // true for ANY name.
+        if ($model && method_exists($model, $this->column)) {
+            return $value;
+        }
+
+        if ($model && method_exists($model, 'set'.Str::studly($this->column).'Attribute')) {
             return $value;
         }
 
