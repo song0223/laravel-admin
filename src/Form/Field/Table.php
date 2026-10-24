@@ -43,6 +43,13 @@ class Table extends HasMany
 
         $forms = [];
 
+        // decode a json-persisted value so the rows render on edit pages
+        $value = $this->value;
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            $value = is_array($decoded) ? $decoded : [];
+        }
+
         if ($values = old($this->column)) {
             foreach ($values as $key => $data) {
                 if ($data[NestedForm::REMOVE_FLAG_NAME] == 1) {
@@ -52,7 +59,7 @@ class Table extends HasMany
                 $forms[$key] = $this->buildNestedForm($this->column, $this->builder, $key)->fill($data);
             }
         } else {
-            foreach ($this->value ?? [] as $key => $data) {
+            foreach ($value ?? [] as $key => $data) {
                 if (isset($data['pivot'])) {
                     $data = array_merge($data, $data['pivot']);
                 }
@@ -71,13 +78,15 @@ class Table extends HasMany
 
         $prepare = $form->prepare($input);
 
-        return collect($prepare)->reject(function ($item) {
+        $rows = collect($prepare)->reject(function ($item) {
             return $item[NestedForm::REMOVE_FLAG_NAME] == 1;
         })->map(function ($item) {
             unset($item[NestedForm::REMOVE_FLAG_NAME]);
 
             return $item;
-        })->toArray();
+        })->values()->toArray();
+
+        return $this->persistableArray($rows);
     }
 
     protected function getKeyName()

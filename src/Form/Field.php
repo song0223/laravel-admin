@@ -457,6 +457,35 @@ class Field implements Renderable
     }
 
     /**
+     * Decide the persistable shape for array-valued fields (KeyValue/Table/
+     * Embeds and friends): hand the raw array to a model array/json cast or
+     * a custom setXxxAttribute mutator, otherwise stringify to json so the
+     * insert/update binder does not throw "Array to string conversion".
+     *
+     * @param mixed $value
+     *
+     * @return array|string
+     */
+    protected function persistableArray($value)
+    {
+        $model = $this->form ? $this->form->model() : null;
+
+        if (!$model) {
+            // widget forms and standalone usage: caller decides the shape
+            return $value;
+        }
+
+        if (is_string($this->column)) {
+            if ($model->hasCast($this->column, ['array', 'json', 'object', 'collection'])
+                || method_exists($model, 'set'.Str::studly($this->column).'Attribute')) {
+                return $value;
+            }
+        }
+
+        return json_encode($value);
+    }
+
+    /**
      * custom format form column data when edit.
      *
      * @param \Closure $call

@@ -30,6 +30,24 @@ class KeyValue extends Field
     }
 
     /**
+     * Decode a json-persisted value so the table renders the stored pairs.
+     *
+     * @return void
+     */
+    protected function formatValue()
+    {
+        if (is_string($this->value)) {
+            $decoded = json_decode($this->value, true);
+
+            $this->value = is_array($decoded) ? $decoded : [];
+        } elseif (null !== $this->value && !is_array($this->value)) {
+            $this->value = [];
+        }
+
+        parent::formatValue();
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function getValidator(array $input)
@@ -78,7 +96,7 @@ SCRIPT;
 
     public function prepare($value)
     {
-        return array_combine($value['keys'], $value['values']);
+        return $this->persistableArray(array_combine($value['keys'], $value['values']));
     }
 
     public function render()

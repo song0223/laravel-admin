@@ -46,7 +46,9 @@ class Embeds extends Field
     {
         $form = $this->buildEmbeddedForm();
 
-        return $form->setOriginal($this->original)->prepare($input);
+        $prepared = $form->setOriginal($this->original)->prepare($input);
+
+        return $this->persistableArray($prepared);
     }
 
     /**
