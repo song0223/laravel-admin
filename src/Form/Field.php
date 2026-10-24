@@ -290,17 +290,59 @@ class Field implements Renderable
      * the layout renders) so extension field assets load only on pages
      * that actually use the field.
      *
+     * Under pjax the head is stripped from the fragment, so assets are
+     * emitted as container-inline loaders instead: a DOM-presence check
+     * plus a synchronous script fetch ($.ajax async:false keeps order,
+     * the field init scripts registered after run with the plugin ready).
+     *
      * @return void
      */
     public static function registerAssets()
     {
-        if ($assets = static::getAssets()) {
-            if (!empty($assets['css'])) {
-                Admin::css($assets['css']);
+        $assets = static::getAssets();
+
+        $css = (array) Arr::get($assets, 'css', []);
+        $js = (array) Arr::get($assets, 'js', []);
+
+        if (empty($css) && empty($js)) {
+            return;
+        }
+
+        if (!request()->pjax()) {
+            if (!empty($css)) {
+                Admin::css($css);
             }
-            if (!empty($assets['js'])) {
-                Admin::js($assets['js']);
+            if (!empty($js)) {
+                Admin::js($js);
             }
+
+            return;
+        }
+
+        foreach ($css as $url) {
+            $url = addslashes((string) $url);
+
+            Admin::script(<<<SCRIPT
+(function () {
+    var u = '{$url}';
+    if (!u || document.querySelector('link[href="' + u + '"]')) return;
+    var l = document.createElement('link');
+    l.rel = 'stylesheet'; l.href = u;
+    document.head.appendChild(l);
+})();
+SCRIPT);
+        }
+
+        foreach ($js as $url) {
+            $url = addslashes((string) $url);
+
+            Admin::script(<<<SCRIPT
+(function () {
+    var u = '{$url}';
+    if (!u || document.querySelector('script[src="' + u + '"]')) return;
+    $.ajax({ url: u, dataType: 'script', async: false, cache: true });
+})();
+SCRIPT);
         }
     }
 
@@ -502,7 +544,22 @@ class Field implements Renderable
             }
         }
 
-        return json_encode($value);
+        return static::encodeJson($value);
+    }
+
+    /**
+     * json_encode that never returns false into the database (invalid
+     * utf-8 / INF would silently wipe the whole file list).
+     *
+     * @param mixed $value
+     *
+     * @return string
+     */
+    protected static function encodeJson($value)
+    {
+        $json = json_encode($value, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+
+        return $json === false ? '[]' : $json;
     }
 
     /**

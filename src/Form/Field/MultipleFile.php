@@ -170,7 +170,7 @@ class MultipleFile extends Field
             return $merged;
         }
 
-        return json_encode($merged);
+        return static::encodeJson($merged);
     }
 
     /**

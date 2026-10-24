@@ -303,6 +303,9 @@ return [
         'global_fields' => [
             'select', 'multipleSelect', 'tags',
             'date', 'datetime', 'dateRange', 'datetimeRange',
+            // inline-edit (belongsto radio) needs iCheck, quick-create
+            // text masks need inputmask - both ship with these fields
+            'checkbox', 'radio', 'mobile',
         ],
     ],
 

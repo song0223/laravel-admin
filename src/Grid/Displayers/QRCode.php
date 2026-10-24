@@ -36,7 +36,7 @@ SCRIPT;
             "<img src='https://api.qrserver.com/v1/create-qr-code/?size=%sx%s&data=%s' style='height:%spx;width:%spx;'/>",
             (int) $width,
             (int) $height,
-            urlencode(e((string) $content)),
+            e(urlencode((string) $content)),
             (int) $height,
             (int) $width
         );

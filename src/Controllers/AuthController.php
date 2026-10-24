@@ -45,13 +45,15 @@ class AuthController extends Controller
     public function postLogin(Request $request)
     {
         // [Security] configurable login throttling (admin.auth.throttle);
-        // generous defaults so a shared office ip is never locked out
-        $throttle = (array) config('admin.auth.throttle', [
+        // generous defaults so a shared office ip is never locked out.
+        // Merge with defaults so a published config that predates this
+        // feature (empty array) still gets working defaults.
+        $throttle = array_merge([
             'enable'          => true,
             'max_attempts'    => 10,
             'decay_seconds'   => 60,
             'lockout_seconds' => 60,
-        ]);
+        ], (array) config('admin.auth.throttle', []));
 
         $maxAttempts = (int) ($throttle['max_attempts'] ?? 10);
         $decaySeconds = max((int) ($throttle['decay_seconds'] ?? 60), 1);
@@ -59,7 +61,12 @@ class AuthController extends Controller
         $key = null;
 
         if (!empty($throttle['enable']) && $maxAttempts > 0) {
-            $key = 'admin-login:'.hash('sha256', (string) $request->ip());
+            // key by ip AND username: a shared NAT office ip making honest
+            // mistakes on different accounts should not lock each other out,
+            // while a single account still gets fully protected
+            $username = (string) $request->input($this->username(), '');
+
+            $key = 'admin-login:'.hash('sha256', $request->ip().'|'.$username);
 
             if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
                 $seconds = max(RateLimiter::availableIn($key), $lockoutSeconds);

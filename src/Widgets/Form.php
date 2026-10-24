@@ -383,6 +383,9 @@ class Form implements Renderable
     {
         $field->setWidgetForm($this);
 
+        // [Perf] on-demand field assets (widget forms bypass Form::pushField)
+        $field::registerAssets();
+
         array_push($this->fields, $field);
 
         return $this;

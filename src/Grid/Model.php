@@ -475,9 +475,20 @@ class Model
     {
         if ($perPage = request($this->perPageName)) {
             // [Security] cap the client-controlled page size, a huge per_page
-            // would load and render the whole table in one request
+            // would load and render the whole table in one request.
+            // Non-numeric or out-of-range falls back to the default page
+            // size instead of collapsing to a single row per page.
+            $perPage = (int) $perPage;
+
+            if ($perPage < 1) {
+                $perPage = (int) config('admin.per_page', $this->perPage);
+            }
+
             $max = (int) config('admin.grid.per_page_max', 500);
-            $perPage = min(max((int) $perPage, 1), max($max, 1));
+
+            if ($max > 0) {
+                $perPage = min($perPage, $max);
+            }
 
             if (is_array($paginate)) {
                 $paginate['arguments'][0] = $perPage;
@@ -534,13 +545,20 @@ class Model
 
         // [Security] the column must be one actually registered on this grid
         // (dot suffixes allowed for json paths) - raw request values used to
-        // flow unchecked into CAST()/JSON_EXTRACT() raw orderBy expressions
+        // flow unchecked into CAST()/JSON_EXTRACT() raw orderBy expressions.
+        // Registered names may be the full "profile.color" / "data->json->x"
+        // form, so normalize both sides before comparing.
         if ($this->grid && $columns = $this->grid->columns()) {
             $registered = $columns->map(function ($column) {
-                return $column->getName();
+                return str_replace('->', '.', (string) $column->getName());
             })->filter()->all();
 
-            if ($registered && !in_array(Str::before($columnName, '.'), $registered, true)) {
+            $normalized = str_replace('->', '.', $columnName);
+
+            $allowed = in_array($normalized, $registered, true)
+                || in_array(Str::before($normalized, '.'), $registered, true);
+
+            if ($registered && !$allowed) {
                 return;
             }
         }

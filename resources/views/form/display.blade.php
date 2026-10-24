@@ -4,7 +4,8 @@
         <div class="box box-solid box-default no-margin">
             <!-- /.box-header -->
             <div class="box-body">
-                {!! $value !!}&nbsp;
+                {{-- [Security] escape the model value by default; use ->as(fn ($v) => ...) for raw html --}}
+                {{ $value }}&nbsp;
             </div><!-- /.box-body -->
         </div>
 

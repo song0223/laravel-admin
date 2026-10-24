@@ -8,7 +8,7 @@
 
         <div class="picker-file-preview {{ empty($preview) ? 'hide' : '' }}">
             @foreach($preview as $item)
-            <div class="file-preview-frame" data-val="{!! $item['value'] !!}">
+            <div class="file-preview-frame" data-val="{{ $item['value'] }}">
                 <div class="file-content">
                     @if($item['is_file'])
                         <i class="fa fa-file-text-o"></i>

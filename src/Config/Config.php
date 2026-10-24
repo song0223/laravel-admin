@@ -19,13 +19,6 @@ use Illuminate\Support\Str;
 class Config
 {
     /**
-     * Whether load() already ran in this request.
-     *
-     * @var bool
-     */
-    protected static $loaded = false;
-
-    /**
      * Load whitelisted config rows into the Laravel config repository.
      *
      * @return void
@@ -71,25 +64,33 @@ class Config
             return;
         }
 
-        if (static::$loaded) {
-            return;
-        }
-
-        static::$loaded = true;
-
         if (app()->runningInConsole()) {
             return;
         }
 
         // limit to admin routes by default - front-facing pages should not
         // pay a table scan for admin-only settings (toggle via
-        // admin.database_config.admin_only)
+        // admin.database_config.admin_only). request()->path() has NO
+        // leading slash, so compare without one.
         if (config('admin.database_config.admin_only', true)) {
-            $prefix = '/'.trim((string) config('admin.route.prefix', 'admin'), '/');
+            $prefix = trim((string) config('admin.route.prefix', 'admin'), '/');
+            $path = trim(request()->path(), '/');
 
-            if (!Str::is($prefix.'/*', request()->path()) && request()->path() !== trim($prefix, '/')) {
+            if ($path !== $prefix && !Str::is($prefix.'/*', $path)) {
                 return;
             }
+        }
+
+        // memoize per request via request attributes - a plain static flag
+        // would leak across requests on long-lived workers (octane)
+        $request = request();
+
+        if ($request && $request->attributes->has(self::class)) {
+            return;
+        }
+
+        if ($request) {
+            $request->attributes->set(self::class, true);
         }
 
         try {
