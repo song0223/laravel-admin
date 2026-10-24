@@ -158,6 +158,26 @@ class MultipleFile extends Field
     }
 
     /**
+     * Normalize the model value before preview/caption mapping: the
+     * persisted value is a json string (or a legacy comma-separated list),
+     * preview()/initialPreviewConfig() both expect an array.
+     *
+     * @return void
+     */
+    protected function formatValue()
+    {
+        if (is_string($this->value)) {
+            $decoded = json_decode($this->value, true);
+
+            $this->value = is_array($decoded) ? $decoded : array_filter(explode(',', $this->value));
+        } elseif (null !== $this->value && !is_array($this->value)) {
+            $this->value = [];
+        }
+
+        parent::formatValue();
+    }
+
+    /**
      * @return array|mixed
      */
     public function original()
