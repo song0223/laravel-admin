@@ -10,16 +10,17 @@ $('.inline-upload-trigger').click(function () {
     $('#'+$(this).data('target')).trigger('click');
 });
 
-$('input.inline-upload').on('change', function () {
+$('input.inline-upload').on('change', function (e) {
 
     var formData = new FormData();
 
     @if ($multiple)
-        event.target.files.forEach(function (file) {
+        // FileList is not an array and has no forEach - convert first
+        Array.from(e.target.files).forEach(function (file) {
             formData.append("{{ $name }}[]", file);
         });
     @else
-    formData.append("{{ $name }}", event.target.files[0]);
+    formData.append("{{ $name }}", e.target.files[0]);
     @endif
     formData.append('_token', LA.token);
     formData.append('_method', 'PUT');
