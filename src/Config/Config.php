@@ -3,6 +3,7 @@
 namespace Encore\Admin\Config;
 
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * Database-backed configuration loader with a whitelist guard.
@@ -17,6 +18,13 @@ use Illuminate\Support\Facades\Log;
  */
 class Config
 {
+    /**
+     * Whether load() already ran in this request.
+     *
+     * @var bool
+     */
+    protected static $loaded = false;
+
     /**
      * Load whitelisted config rows into the Laravel config repository.
      *
@@ -51,12 +59,37 @@ class Config
      * Try to load, silently degrade when the table is missing or the DB is
      * unreachable (fresh installs / migrations / console commands).
      *
+     * Skips entirely on non-admin requests and in the console - the loaded
+     * values only feed admin-facing features, so the rest of the app should
+     * not pay a full table scan per request. Result is memoized per request.
+     *
      * @return void
      */
     public static function tryLoad()
     {
         if (config('admin.database_config.enable', true) === false) {
             return;
+        }
+
+        if (static::$loaded) {
+            return;
+        }
+
+        static::$loaded = true;
+
+        if (app()->runningInConsole()) {
+            return;
+        }
+
+        // limit to admin routes by default - front-facing pages should not
+        // pay a table scan for admin-only settings (toggle via
+        // admin.database_config.admin_only)
+        if (config('admin.database_config.admin_only', true)) {
+            $prefix = '/'.trim((string) config('admin.route.prefix', 'admin'), '/');
+
+            if (!Str::is($prefix.'/*', request()->path()) && request()->path() !== trim($prefix, '/')) {
+                return;
+            }
         }
 
         try {

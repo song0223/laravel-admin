@@ -228,6 +228,10 @@ return [
         'enable'          => true,
         'table'           => 'admin_config',
         'allowed_prefixes' => ['base.'],
+
+        // [Perf] 仅在 admin 路由加载（前台请求不再扫表）；若前台业务也
+        // 依赖 config('base.*') 则置 false
+        'admin_only'      => true,
     ],
 
     /*

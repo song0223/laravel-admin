@@ -1315,7 +1315,7 @@ class Form implements Renderable
      *
      * @return Form\Tools
      */
-    public function header(Closure $callback = null)
+    public function header(?Closure $callback = null)
     {
         if (func_num_args() === 0) {
             return $this->builder->getTools();
@@ -1425,7 +1425,7 @@ class Form implements Renderable
      *
      * @return \Encore\Admin\Form\Footer
      */
-    public function footer(Closure $callback = null)
+    public function footer(?Closure $callback = null)
     {
         if (func_num_args() === 0) {
             return $this->builder()->getFooter();

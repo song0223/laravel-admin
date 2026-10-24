@@ -7,6 +7,16 @@ use Illuminate\Support\Collection;
 trait HasPermissions
 {
     /**
+     * Per-request memo of all permission slugs - both the permission
+     * middleware and the menu rendering call can()/allPermissions() many
+     * times per request; without memoization each non-admin user paid
+     * a full roles+permissions query set twice.
+     *
+     * @var \Illuminate\Support\Collection|null
+     */
+    protected $allPermissionSlugs;
+
+    /**
      * Get all permissions of user.
      *
      * @return mixed
@@ -14,6 +24,20 @@ trait HasPermissions
     public function allPermissions(): Collection
     {
         return $this->roles()->with('permissions')->get()->pluck('permissions')->flatten()->merge($this->permissions);
+    }
+
+    /**
+     * All permission slugs of the user (memoized per request).
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public function allPermissionSlugs(): Collection
+    {
+        if ($this->allPermissionSlugs === null) {
+            $this->allPermissionSlugs = $this->allPermissions()->pluck('slug')->unique()->values();
+        }
+
+        return $this->allPermissionSlugs;
     }
 
     /**
@@ -34,11 +58,7 @@ trait HasPermissions
             return true;
         }
 
-        if ($this->permissions->pluck('slug')->contains($ability)) {
-            return true;
-        }
-
-        return $this->roles->pluck('permissions')->flatten()->pluck('slug')->contains($ability);
+        return $this->allPermissionSlugs()->contains($ability);
     }
 
     /**

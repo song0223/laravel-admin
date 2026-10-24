@@ -358,10 +358,33 @@ trait UploadField
         }
 
         if (is_string($this->name)) {
-            return $this->name;
+            return $this->sanitizeFilename($this->name);
         }
 
-        return $file->getClientOriginalName();
+        // [Security] keep only the basename of the client-provided name -
+        // path segments used to flow into the storage path unfiltered
+        return $this->sanitizeFilename($file->getClientOriginalName());
+    }
+
+    /**
+     * [Security] strip directory traversal and control characters from a
+     * storage file name, keeping unicode letters/digits and common safe
+     * punctuation intact.
+     *
+     * @param string $name
+     *
+     * @return string
+     */
+    protected function sanitizeFilename($name)
+    {
+        $name = basename((string) $name);
+
+        $name = preg_replace('/[\x00-\x1F\x7F]/u', '', $name);
+
+        // drop anything that could climb out of the directory
+        $name = str_replace(['..', "\\", '/'], '', $name);
+
+        return trim($name) !== '' ? $name : 'file';
     }
 
     /**

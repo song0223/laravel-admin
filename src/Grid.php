@@ -202,7 +202,7 @@ class Grid
      *
      * @param Closure $callback
      */
-    public static function init(Closure $callback = null)
+    public static function init(?Closure $callback = null)
     {
         static::$initCallbacks[] = $callback;
     }
@@ -603,7 +603,7 @@ class Grid
      *
      * @return Collection|null
      */
-    public function rows(Closure $callable = null)
+    public function rows(?Closure $callable = null)
     {
         if (is_null($callable)) {
             return $this->rows;
