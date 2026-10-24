@@ -221,12 +221,26 @@ trait HasFields
         $css = collect();
         $js = collect();
 
-        foreach (static::$availableFields as $field) {
-            // [Perf] extension fields (Form::extend) load on demand via
-            // Form::pushField() - only pages that actually use them pay
-            // for their assets. Core fields stay globally available for
-            // grid/filter pages that render without a Form.
+        // [Perf] heavy field assets (fileinput, iconpicker, sliders, editors,
+        // ...) load on demand via Form::pushField(). Only the light set that
+        // grid filters / inline editing rely on stays global - the dashboard
+        // used to ship ~930KB of js for fields no page used. Configure via
+        // admin.assets.global_fields ('all' restores the old behaviour).
+        $global = config('admin.assets.global_fields');
+
+        if ($global === 'all') {
+            $global = null;
+        }
+
+        $global = $global === null ? null : (array) $global;
+
+        foreach (static::$availableFields as $abstract => $field) {
+            // extension fields (Form::extend) always load on demand
             if (in_array($field, static::$extendedFields, true)) {
+                continue;
+            }
+
+            if (is_array($global) && !in_array($abstract, $global, true)) {
                 continue;
             }
 
