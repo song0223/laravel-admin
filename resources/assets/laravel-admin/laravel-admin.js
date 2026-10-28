@@ -28,6 +28,52 @@ $(document).pjax('a:not(a[target="_blank"])', {
     container: '#pjax-container'
 });
 
+// [Fix] jquery-pjax merges the response's <head> stylesheets into the
+// document on every navigation without deduplication - a stylesheet that
+// ships with a form field (e.g. select2.min.css) got re-appended after
+// AdminLTE's skin overrides on each pjax entry, and whichever copy came
+// last won the cascade (select2 tags flipped from the AdminLTE blue to
+// bare grey). Watch <head> and drop any stylesheet whose href+media pair
+// is already present - insertion order stops mattering entirely.
+$(function () {
+    var head = document.head;
+    if (!head || head.__adminStylesheetDeduper) {
+        return;
+    }
+    head.__adminStylesheetDeduper = true;
+
+    // [Fix] the same stylesheet reaches the head in two spellings - the
+    // full-page render emits absolute urls while pjax fragments keep the
+    // relative path, so the dedupe key must be the pathname
+    var dedupe = function () {
+        var seen = {};
+        var links = head.querySelectorAll('link[rel="stylesheet"]');
+
+        for (var i = 0; i < links.length; i++) {
+            var link = links[i];
+            var href = link.getAttribute('href') || '';
+
+            var path = href;
+            try {
+                path = new URL(href, location.origin).pathname;
+            } catch (e) {}
+
+            var key = path + '|' + (link.getAttribute('media') || '');
+
+            if (seen[key]) {
+                link.parentNode && link.parentNode.removeChild(link);
+                continue;
+            }
+            seen[key] = true;
+        }
+    };
+
+    // catch insertions from any source (jquery-pjax, extensions, scripts)
+    new MutationObserver(dedupe).observe(head, {childList: true});
+
+    dedupe();
+});
+
 NProgress.configure({parent: '#app'});
 
 $(document).on('pjax:timeout', function (event) {
