@@ -14,5 +14,9 @@
 
     </div>
     <!-- Default to the left -->
-    <strong>Powered by <a href="{{ config('admin.footer.link', 'https://github.com/song0223/laravel-admin') }}" target="_blank">{{ config('admin.footer.text', 'laravel-admin') }}</a></strong>
+    @php
+        $footerLink = trim((string) config('admin.footer.link', ''));
+        $footerText = config('admin.footer.text', 'laravel-admin');
+    @endphp
+    <strong>Powered by @if($footerLink !== '')<a href="{{ $footerLink }}" target="_blank">{{ $footerText }}</a>@else{{ $footerText }}@endif</strong>
 </footer>

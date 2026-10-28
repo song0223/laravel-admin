@@ -294,6 +294,7 @@ return [
     */
     'footer' => [
         'text' => 'laravel-admin',
+        // 留空则只显示文字、不带链接
         'link' => 'https://github.com/song0223/laravel-admin',
     ],
 
